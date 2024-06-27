@@ -145,7 +145,8 @@ class Pay implements HttpPostActionInterface
             'metadata' => [
                 'invoices' => $invoices,
                 'selected_invoices' => $selectedInvoices,
-                'display_id' => $displayId
+                'display_id' => $displayId,
+                'store_id' => $storeId
             ],
             'source' => 'MAGENTO_AX_INVOICE',
             'successUrl' => $url

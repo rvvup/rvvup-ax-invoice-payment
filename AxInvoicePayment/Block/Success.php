@@ -85,12 +85,12 @@ class Success extends Template
 
     /**
      * @param string $checkoutId
-     * @param string $storeId
+     * @param string|null $storeId
      * @return array
      */
-    private function getCheckoutData(
+    public function getCheckoutData(
         string $checkoutId,
-        string $storeId
+        ?string $storeId
     ): array {
         $params =  ['headers' => $this->getHeaders($storeId), 'json' => ''];
         $request = $this->curl->request(Request::METHOD_GET, $this->getApiUrl($storeId, $checkoutId), $params);
@@ -99,10 +99,10 @@ class Success extends Template
     }
 
     /**
-     * @param string $storeId
+     * @param string|null $storeId
      * @return string[]
      */
-    private function getHeaders(string $storeId): array
+    private function getHeaders(?string $storeId): array
     {
         $token = $this->config->getJwtConfig(ScopeInterface::SCOPE_STORE, $storeId);
         return [
@@ -112,11 +112,12 @@ class Success extends Template
         ];
     }
 
-    /** @todo move to rest api sdk
-     * @param string $storeId
+    /** @param string|null $storeId
+     * @param string $checkoutId
      * @return string
+     * @todo move to rest api sdk
      */
-    private function getApiUrl(string $storeId, string $checkoutId): string
+    private function getApiUrl(?string $storeId, string $checkoutId): string
     {
         $merchantId = $this->config->getMerchantId(ScopeInterface::SCOPE_STORE, $storeId);
         $baseUrl = $this->config->getEndpoint(ScopeInterface::SCOPE_STORE, $storeId);

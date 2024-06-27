@@ -7,4 +7,5 @@
         </arguments>
     </type>
     <preference for="Rvvup\AxInvoicePayment\Api\GetInvoice" type="Rvvup\AxInvoicePayment\Model\GetInvoice"/>
+    <preference for="Rvvup\AxInvoicePayment\Api\UpdateInvoice" type="Rvvup\AxInvoicePayment\Model\UpdateInvoice"/>
 </config>
