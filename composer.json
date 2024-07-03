@@ -1,0 +1,19 @@
+{
+  "name": "rvvup/module-ax-invoice-payment",
+  "version": "1.0.0",
+  "description": "N/A",
+  "type": "magento2-module",
+  "require": {
+    "magento/framework": "*",
+    "rvvup/module-magento-payments": "*"
+  },
+  "license": "MIT",
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "Rvvup\\AxInvoicePayment\\": ""
+    }
+  }
+}

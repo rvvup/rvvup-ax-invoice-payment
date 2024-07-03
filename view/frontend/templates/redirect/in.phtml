@@ -1,0 +1,84 @@
+<?php
+/** @var \Rvvup\AxInvoicePayment\Block\Info $block */
+if (!$escaper) {
+    $escaper = $block;
+}
+$paymentLink = $block->getUrl('axinvoice/invoice/pay');
+?>
+<h2>Your statement #<?= $escaper->escapeHtml($block->getDisplayId())?></h2>
+<table class="data-table">
+    <thead>
+    <tr>
+        <th><?= __('Is Payed') ?></th>
+        <th><?= __('Date') ?></th>
+        <th><?= __('Invoice Number') ?></th>
+        <th><?= __('Total') ?></th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php foreach ($block->getInvoices() as $invoice): ?>
+        <tr style="border-top: 1px solid #ddd; border-bottom: 1px solid #ddd;"
+            data-bind="attr: {'invoice_id': '<?= $invoice->getInvoiceNumber() ?>'}">
+            <td>
+                <input type="checkbox" class="invoice-checkbox" data-bind="attr: {'invoice_id': '<?= $invoice->getInvoiceNumber() ?>'}"
+                    <?= $invoice->getIsPayed() ? 'checked disabled' : ''; ?>
+                >
+            </td>
+            <td><?= $invoice->getDate() ?></td>
+            <td><?= $invoice->getInvoiceNumber() ?></td>
+            <td id="price"><?= $invoice->getTotal() ?>£</td>
+        </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+<button id="rvvup-ax-payment"><?= __('Pay Now') ?></button>
+<script src="https://checkout.rvvup.com/sdk/v1.js"></script>
+<script type="text/javascript">
+    require([
+        'jquery',
+        'Magento_Ui/js/modal/alert',
+        'Rvvup_AxInvoicePayment/js/rvvup-checkout'
+    ], function($, alert, rvvupCheckout) {
+        var button = document.getElementById('rvvup-ax-payment');
+
+        button.addEventListener('click', function() {
+            var displayId = '<?= $block->getDisplayId() ?>';
+            var selectedInvoices = [];
+            $('.invoice-checkbox:checked').each(function() {
+                if (!$(this).is(':disabled')) {
+                    selectedInvoices.push($(this)[0].attributes.invoice_id.value);
+                }
+            });
+            if (selectedInvoices.length === 0) {
+                alert({
+                    title: '<?= __('No Invoice Selected') ?>',
+                    content: '<?= __('Please select at least one invoice to pay.') ?>',
+                    actions: {
+                        always: function(){}
+                    }
+                });
+                return;
+            }
+            button.disabled = true;
+            rvvupCheckout.createCheckout(
+                '<?= $escaper->escapeUrl($paymentLink) ?>',
+                   getPrice(selectedInvoices),
+                '<?= $escaper->escapeJs($block->getStoreId()) ?>',
+                '<?= $escaper->escapeJs('GBP') ?>',
+                '<?= $block->getInvoicesData() ?>',
+                JSON.stringify(selectedInvoices),
+                displayId
+            );
+            function getPrice(selectedInvoices) {
+                var price = 0;
+                selectedInvoices.forEach(function(invoiceId) {
+                    var row = $('tr[invoice_id="' + invoiceId + '"]')[0];
+                    var val = row.querySelector('td[id="price"]').textContent;
+                    price += parseFloat(val.replace(/[^\d.-]/g, ''));
+                });
+                return price;
+            }
+
+        }, false);
+    });
+</script>
