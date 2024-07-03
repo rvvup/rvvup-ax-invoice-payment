@@ -7,9 +7,7 @@
     "magento/framework": "*",
     "rvvup/module-magento-payments": "*"
   },
-  "license": [
-    "Proprietary"
-  ],
+  "license": "MIT",
   "autoload": {
     "files": [
       "registration.php"
