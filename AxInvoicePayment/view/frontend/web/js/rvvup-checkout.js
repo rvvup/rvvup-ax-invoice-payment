@@ -1,7 +1,7 @@
 define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
     'use strict';
     return {
-        createVirtualTerminal: function (
+        createCheckout: function (
             url,
             amount,
             store_id,

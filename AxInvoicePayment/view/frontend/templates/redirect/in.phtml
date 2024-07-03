@@ -37,8 +37,8 @@ $paymentLink = $block->getUrl('axinvoice/invoice/pay');
     require([
         'jquery',
         'Magento_Ui/js/modal/alert',
-        'Rvvup_AxInvoicePayment/js/virtual-terminal'
-    ], function($, alert, virtualTerminal) {
+        'Rvvup_AxInvoicePayment/js/rvvup-checkout'
+    ], function($, alert, rvvupCheckout) {
         var button = document.getElementById('rvvup-ax-payment');
 
         button.addEventListener('click', function() {
@@ -60,7 +60,7 @@ $paymentLink = $block->getUrl('axinvoice/invoice/pay');
                 return;
             }
             button.disabled = true;
-            virtualTerminal.createVirtualTerminal(
+            rvvupCheckout.createCheckout(
                 '<?= $escaper->escapeUrl($paymentLink) ?>',
                    getPrice(selectedInvoices),
                 '<?= $escaper->escapeJs($block->getStoreId()) ?>',

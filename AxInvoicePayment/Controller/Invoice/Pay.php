@@ -88,13 +88,13 @@ class Pay implements HttpPostActionInterface
         }
 
         try {
-            $body = $this->createVirtualCheckout($amount, $storeId, $currencyCode, $invoices, $selectedInvoices, $displayId);
+            $body = $this->createCheckout($amount, $storeId, $currencyCode, $invoices, $selectedInvoices, $displayId);
             $result->setData([
                 'iframe-url' => $body['url'],
                 'success' => true
             ]);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to create Rvvup virtual checkout', [$e->getMessage()]);
+            $this->logger->error('Failed to create Rvvup checkout', [$e->getMessage()]);
             $result->setData([
                 'success' => false
             ]);
@@ -103,7 +103,7 @@ class Pay implements HttpPostActionInterface
         return $result;
     }
 
-    private function createVirtualCheckout(
+    private function createCheckout(
         string $amount,
         string $storeId,
         string $currencyCode,
