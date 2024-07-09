@@ -6,9 +6,9 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
             amount,
             store_id,
             currency_code,
-            invoices,
             selected_invoices,
-            display_id
+            display_id,
+            invoiceParameter
         ) {
             $.ajax({
                 url: url,
@@ -17,9 +17,9 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
                     'amount' : amount,
                     'store_id' : store_id,
                     'currency_code' : currency_code,
-                    'invoices' : invoices,
                     'selected_invoices' : selected_invoices,
-                    'display_id' : display_id
+                    'display_id' : display_id,
+                    'invoice_parameter': invoiceParameter
                 },
                 success: function (data) {
                     if (data.success !== true) {

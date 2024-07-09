@@ -3,9 +3,16 @@
 if (!$escaper) {
     $escaper = $block;
 }
-$paymentLink = $block->getUrl('axinvoice/invoice/pay');
+$paymentLink = $block->getUrl('payment/invoice/pay');
+if ($block->isReturnUrlUsed()) {
+    list($invoices, $displayId) = $block->getDisplayData();
+} else {
+    $invoices = $block->getInvoices();
+    $displayId = false;
+}
+
 ?>
-<h2>Your statement #<?= $escaper->escapeHtml($block->getDisplayId())?></h2>
+<h2>Your statement #<?= $escaper->escapeHtml($displayId ?: $block->getDisplayId())?></h2>
 <table class="data-table">
     <thead>
     <tr>
@@ -16,12 +23,13 @@ $paymentLink = $block->getUrl('axinvoice/invoice/pay');
     </tr>
     </thead>
     <tbody>
-    <?php foreach ($block->getInvoices() as $invoice): ?>
+    <?php foreach ($invoices as $invoice): ?>
         <tr style="border-top: 1px solid #ddd; border-bottom: 1px solid #ddd;"
             data-bind="attr: {'invoice_id': '<?= $invoice->getInvoiceNumber() ?>'}">
             <td>
                 <input type="checkbox" class="invoice-checkbox" data-bind="attr: {'invoice_id': '<?= $invoice->getInvoiceNumber() ?>'}"
                     <?= $invoice->getIsPayed() ? 'checked disabled' : ''; ?>
+                    <?= $invoice->getIsRecent() ? 'style="accent-color:green"':''?>
                 >
             </td>
             <td><?= $invoice->getDate() ?></td>
@@ -43,6 +51,7 @@ $paymentLink = $block->getUrl('axinvoice/invoice/pay');
 
         button.addEventListener('click', function() {
             var displayId = '<?= $block->getDisplayId() ?>';
+            var invoiceParameter = '<?= $block->getInvoiceParameterUsed() ?>';
             var selectedInvoices = [];
             $('.invoice-checkbox:checked').each(function() {
                 if (!$(this).is(':disabled')) {
@@ -65,9 +74,9 @@ $paymentLink = $block->getUrl('axinvoice/invoice/pay');
                    getPrice(selectedInvoices),
                 '<?= $escaper->escapeJs($block->getStoreId()) ?>',
                 '<?= $escaper->escapeJs('GBP') ?>',
-                '<?= $block->getInvoicesData() ?>',
                 JSON.stringify(selectedInvoices),
-                displayId
+                displayId,
+                invoiceParameter
             );
             function getPrice(selectedInvoices) {
                 var price = 0;
@@ -80,5 +89,17 @@ $paymentLink = $block->getUrl('axinvoice/invoice/pay');
             }
 
         }, false);
+    });
+</script>
+<script>
+    require([
+        'jquery'
+    ], function($) {
+        $('input[type="checkbox"]').on("click", function (e) {
+            var checkbox = $(this);
+            if (!checkbox.is(":checked")) {
+                e.preventDefault();
+            }
+        });
     });
 </script>

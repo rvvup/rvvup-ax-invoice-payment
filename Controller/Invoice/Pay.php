@@ -74,9 +74,9 @@ class Pay implements HttpPostActionInterface
         $amount = $this->request->getParam('amount');
         $storeId = $this->request->getParam('store_id');
         $currencyCode = $this->request->getParam('currency_code');
-        $invoices = $this->request->getParam('invoices');
         $selectedInvoices = $this->request->getParam('selected_invoices');
         $displayId = $this->request->getParam('display_id');
+        $invoiceParam = $this->request->getParam('invoice_parameter');
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
         if (!$this->config->isActive(ScopeInterface::SCOPE_STORE, $storeId)) {
@@ -88,7 +88,14 @@ class Pay implements HttpPostActionInterface
         }
 
         try {
-            $body = $this->createCheckout($amount, $storeId, $currencyCode, $invoices, $selectedInvoices, $displayId);
+            $body = $this->createCheckout(
+                $amount,
+                $storeId,
+                $currencyCode,
+                $selectedInvoices,
+                $displayId,
+                $invoiceParam
+            );
             $result->setData([
                 'iframe-url' => $body['url'],
                 'success' => true
@@ -107,11 +114,18 @@ class Pay implements HttpPostActionInterface
         string $amount,
         string $storeId,
         string $currencyCode,
-        string $invoices,
         string $selectedInvoices,
-        string $displayId
+        string $displayId,
+        string $invoiceParam
     ): array {
-        $params = $this->buildRequestData($amount, $storeId, $currencyCode, $invoices, $selectedInvoices, $displayId);
+        $params = $this->buildRequestData(
+            $amount,
+            $storeId,
+            $currencyCode,
+            $selectedInvoices,
+            $displayId,
+            $invoiceParam
+        );
         $request = $this->curl->request(Request::METHOD_POST, $this->getApiUrl($storeId), $params);
         $body = $this->json->unserialize($request->body);
         return $body;
@@ -130,23 +144,23 @@ class Pay implements HttpPostActionInterface
         string $amount,
         string $storeId,
         string $currencyCode,
-        string $invoices,
         string $selectedInvoices,
-        string $displayId
+        string $displayId,
+        string $invoiceParam
     ): array {
         $url = $this->storeManager->getStore($storeId)->getBaseUrl(
                 UrlInterface::URL_TYPE_WEB,
                 true
             )
-            . "axinvoice/redirect/in?store_id=$storeId&checkout_id={{CHECKOUT_ID}}";
+            . "payment/invoice/in?store_id=$storeId&$invoiceParam=$displayId&checkout_id={{CHECKOUT_ID}}";
 
         $postData = [
             'amount' => ['amount' => $amount, 'currency' => $currencyCode],
             'metadata' => [
-                'invoices' => $invoices,
                 'selected_invoices' => $selectedInvoices,
                 'display_id' => $displayId,
-                'store_id' => $storeId
+                'store_id' => $storeId,
+                'invoice_parameter' => $invoiceParam
             ],
             'source' => 'MAGENTO_AX_INVOICE',
             'successUrl' => $url

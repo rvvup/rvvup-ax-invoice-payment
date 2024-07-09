@@ -11,13 +11,13 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Serialize\SerializerInterface;
 use Rvvup\AxInvoicePayment\Api\UpdateInvoice;
-use Rvvup\AxInvoicePayment\Block\Success;
+use Rvvup\AxInvoicePayment\Block\Info;
 use Rvvup\Payments\Model\ConfigInterface;
 
 class Index implements HttpPostActionInterface, CsrfAwareActionInterface
 {
-    /** @var Success */
-    private $success;
+    /** @var Info */
+    private $infoBlock;
 
     /** @var RequestInterface */
     private $request;
@@ -35,7 +35,7 @@ class Index implements HttpPostActionInterface, CsrfAwareActionInterface
     private $updateInvoice;
 
     /**
-     * @param Success $success
+     * @param Info $infoBlock
      * @param RequestInterface $request
      * @param ResultFactory $resultFactory
      * @param SerializerInterface $json
@@ -43,7 +43,7 @@ class Index implements HttpPostActionInterface, CsrfAwareActionInterface
      * @param UpdateInvoice $updateInvoice
      */
     public function __construct(
-        Success $success,
+        Info $infoBlock,
         RequestInterface $request,
         ResultFactory $resultFactory,
         SerializerInterface $json,
@@ -52,7 +52,7 @@ class Index implements HttpPostActionInterface, CsrfAwareActionInterface
     ) {
         $this->resultFactory = $resultFactory;
         $this->request = $request;
-        $this->success = $success;
+        $this->infoBlock = $infoBlock;
         $this->config = $config;
         $this->json = $json;
         $this->updateInvoice = $updateInvoice;
@@ -63,6 +63,7 @@ class Index implements HttpPostActionInterface, CsrfAwareActionInterface
         $merchantId = $this->request->getParam('merchant_id', false);
         $checkoutId = $this->request->getParam('checkout_id', false);
         $source = $this->request->getParam('application_source', false);
+        $storeId = $this->request->getParam('store_id', null);
 
         if (!$source || $source !== 'MAGENTO_AX_INVOICE') {
             return $this->returnExceptionResponse();
@@ -74,7 +75,7 @@ class Index implements HttpPostActionInterface, CsrfAwareActionInterface
             return $this->returnExceptionResponse();
         }
         try {
-            $data = $this->success->getCheckoutData($checkoutId, null);
+            $data = $this->infoBlock->getCheckoutData($checkoutId, $storeId);
             if (isset($data['status'])) {
                 if ($data['status'] == 'COMPLETED') {
                     $invoices = $this->json->unserialize($data['metadata']['invoices']);
