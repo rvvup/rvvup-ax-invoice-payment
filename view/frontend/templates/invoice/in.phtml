@@ -4,15 +4,9 @@ if (!$escaper) {
     $escaper = $block;
 }
 $paymentLink = $block->getUrl('payment/invoice/pay');
-if ($block->isReturnUrlUsed()) {
-    list($invoices, $displayId) = $block->getDisplayData();
-} else {
-    $invoices = $block->getInvoices();
-    $displayId = false;
-}
-
+list($text, $invoices, $displayId) = $block->getDisplayInformation();
 ?>
-<h2>Your statement #<?= $escaper->escapeHtml($displayId ?: $block->getDisplayId())?></h2>
+<h2><?= $escaper->escapeHtml($text)?></h2>
 <table class="data-table">
     <thead>
     <tr>
@@ -28,13 +22,13 @@ if ($block->isReturnUrlUsed()) {
             data-bind="attr: {'invoice_id': '<?= $invoice->getInvoiceNumber() ?>'}">
             <td>
                 <input type="checkbox" class="invoice-checkbox" data-bind="attr: {'invoice_id': '<?= $invoice->getInvoiceNumber() ?>'}"
-                    <?= $invoice->getIsPayed() ? 'checked disabled' : ''; ?>
-                    <?= $invoice->getIsRecent() ? 'style="accent-color:green"':''?>
+                    <?= $invoice->getIsRecent() ? 'checked style="accent-color:green"' : ''; ?>
+                    <?= $invoice->getIsPayed() ? 'checked' : ''; ?>
                 >
             </td>
             <td><?= $invoice->getDate() ?></td>
             <td><?= $invoice->getInvoiceNumber() ?></td>
-            <td id="price"><?= $invoice->getTotal() ?>£</td>
+            <td id="price">£<?= $invoice->getTotal() ?></td>
         </tr>
     <?php endforeach; ?>
     </tbody>
@@ -54,7 +48,7 @@ if ($block->isReturnUrlUsed()) {
             var invoiceParameter = '<?= $block->getInvoiceParameterUsed() ?>';
             var selectedInvoices = [];
             $('.invoice-checkbox:checked').each(function() {
-                if (!$(this).is(':disabled')) {
+                if ($(this)[0].style.accentColor !== 'green') {
                     selectedInvoices.push($(this)[0].attributes.invoice_id.value);
                 }
             });
@@ -71,7 +65,7 @@ if ($block->isReturnUrlUsed()) {
             button.disabled = true;
             rvvupCheckout.createCheckout(
                 '<?= $escaper->escapeUrl($paymentLink) ?>',
-                   getPrice(selectedInvoices),
+                getPrice(selectedInvoices),
                 '<?= $escaper->escapeJs($block->getStoreId()) ?>',
                 '<?= $escaper->escapeJs('GBP') ?>',
                 JSON.stringify(selectedInvoices),

@@ -41,7 +41,7 @@ class GetInvoice implements \Rvvup\AxInvoicePayment\Api\GetInvoice
      */
     public function getListOfInvoicesById(int $id): array
     {
-        $mock = ($id ==3);
+        $mock = ($id == 3);
 
         foreach (range(1, $id) as $item) {
             $items[] = $this->dataObjectFactory->create(

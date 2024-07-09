@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rvvup\AxInvoicePayment\Block;
 
 use Laminas\Http\Request;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
@@ -57,7 +58,10 @@ class Info extends Template
         parent::__construct($context,$data);
     }
 
-    public function getInvoices(): array
+    /**
+     * @return array
+     */
+    private function getInvoices(): array
     {
         if ($this->isReturnUrlUsed()) {
             return $this->getDisplayData();
@@ -72,44 +76,50 @@ class Info extends Template
         return $invoices ?? [];
     }
 
-    public function getInvoicesData(): string
-    {
-        $items = $this->getInvoices();
-        if ($this->isReturnUrlUsed()) {
-            $items = array_first($items);
-        }
-        $itemsData = array_map(function ($item) {
-            return $item->getData();
-        }, $items);
-
-        return $this->json->serialize($itemsData);
-    }
-
-    public function getInvoiceId(): ?int
+    /**
+     * @return int|null
+     */
+    private function getInvoiceId(): ?int
     {
         return (int)$this->_request->getParam('ax_invoice_id') ?? null;
     }
 
-    public function getInvoiceListId() :?int
+    /**
+     * @return int|null
+     */
+    private function getInvoiceListId() :?int
     {
         return (int)$this->_request->getParam('ax_invoice_list_id') ?? null;
     }
 
+    /**
+     * @return int|null
+     */
     public function getDisplayId(): ?int
     {
         return $this->getInvoiceListId() ?: $this->getInvoiceId();
     }
 
+    /**
+     * @return string
+     */
     public function getInvoiceParameterUsed(): string
     {
         return $this->getInvoiceListId() ? 'ax_invoice_list_id': 'ax_invoice_id';
     }
 
-
-    public function getStoreId() {
-        return $this->_storeManager->getStore()->getId();
+    /**
+     * @return int
+     * @throws NoSuchEntityException
+     */
+    public function getStoreId(): int
+    {
+        return (int) $this->_storeManager->getStore()->getId();
     }
 
+    /**
+     * @return bool
+     */
     public function isReturnUrlUsed(): bool
     {
         return (bool)$this->_request->getParam('checkout_id');
@@ -118,7 +128,7 @@ class Info extends Template
     /**
      * @return array
      */
-    public function getDisplayData(): array
+    private function getDisplayData(): array
     {
         $checkoutId = $this->_request->getParam('checkout_id');
         $storeId = $this->_request->getParam('store_id');
@@ -153,6 +163,28 @@ class Info extends Template
             }
         }
         return [[], null];
+    }
+
+    /**
+     * @return array
+     */
+    public function getDisplayInformation() :array
+    {
+        if ($this->isReturnUrlUsed()) {
+            list($invoices, $displayId) = $this->getDisplayData();
+            $state = 'fully';
+            foreach ($invoices as $invoice) {
+                if (!$invoice->getIsPayed()) {
+                    $state = 'partially';
+                }
+            }
+            $text = 'Your statement #' . $displayId .' was ' . $state . ' paid';
+        } else {
+            $text = 'Your statement #' . $this->getDisplayId();
+            $invoices = $this->getInvoices();
+            $displayId = false;
+        }
+        return [$text, $invoices, $displayId];
     }
 
     /**
