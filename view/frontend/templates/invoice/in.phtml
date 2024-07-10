@@ -3,9 +3,10 @@
 if (!$escaper) {
     $escaper = $block;
 }
-$paymentLink = $block->getUrl('axinvoice/invoice/pay');
+$paymentLink = $block->getUrl('payment/invoice/pay');
+list($text, $invoices, $displayId) = $block->getDisplayInformation();
 ?>
-<h2>Your statement #<?= $escaper->escapeHtml($block->getDisplayId())?></h2>
+<h2><?= $escaper->escapeHtml($text)?></h2>
 <table class="data-table">
     <thead>
     <tr>
@@ -16,17 +17,19 @@ $paymentLink = $block->getUrl('axinvoice/invoice/pay');
     </tr>
     </thead>
     <tbody>
-    <?php foreach ($block->getInvoices() as $invoice): ?>
+    <?php foreach ($invoices as $invoice): ?>
         <tr style="border-top: 1px solid #ddd; border-bottom: 1px solid #ddd;"
             data-bind="attr: {'invoice_id': '<?= $invoice->getInvoiceNumber() ?>'}">
             <td>
                 <input type="checkbox" class="invoice-checkbox" data-bind="attr: {'invoice_id': '<?= $invoice->getInvoiceNumber() ?>'}"
-                    <?= $invoice->getIsPayed() ? 'checked disabled' : ''; ?>
+                    <?= $invoice->getIsRecent() ? 'checked style="accent-color:green"' : ''; ?>
+                    <?= $invoice->getIsPayed() ? 'checked' : ''; ?>
+                    <?= ($invoice->getIsPayed() && !$invoice->getIsRecent()) ? 'disabled' : ''; ?>
                 >
             </td>
             <td><?= $invoice->getDate() ?></td>
             <td><?= $invoice->getInvoiceNumber() ?></td>
-            <td id="price"><?= $invoice->getTotal() ?>£</td>
+            <td id="price">£<?= $invoice->getTotal() ?></td>
         </tr>
     <?php endforeach; ?>
     </tbody>
@@ -43,9 +46,10 @@ $paymentLink = $block->getUrl('axinvoice/invoice/pay');
 
         button.addEventListener('click', function() {
             var displayId = '<?= $block->getDisplayId() ?>';
+            var invoiceParameter = '<?= $block->getInvoiceParameterUsed() ?>';
             var selectedInvoices = [];
             $('.invoice-checkbox:checked').each(function() {
-                if (!$(this).is(':disabled')) {
+                if ($(this)[0].style.accentColor !== 'green' && !$(this)[0].disabled) {
                     selectedInvoices.push($(this)[0].attributes.invoice_id.value);
                 }
             });
@@ -62,12 +66,12 @@ $paymentLink = $block->getUrl('axinvoice/invoice/pay');
             button.disabled = true;
             rvvupCheckout.createCheckout(
                 '<?= $escaper->escapeUrl($paymentLink) ?>',
-                   getPrice(selectedInvoices),
+                getPrice(selectedInvoices),
                 '<?= $escaper->escapeJs($block->getStoreId()) ?>',
                 '<?= $escaper->escapeJs('GBP') ?>',
-                '<?= $block->getInvoicesData() ?>',
                 JSON.stringify(selectedInvoices),
-                displayId
+                displayId,
+                invoiceParameter
             );
             function getPrice(selectedInvoices) {
                 var price = 0;
@@ -80,5 +84,17 @@ $paymentLink = $block->getUrl('axinvoice/invoice/pay');
             }
 
         }, false);
+    });
+</script>
+<script>
+    require([
+        'jquery'
+    ], function($) {
+        $('input[type="checkbox"]').on("click", function (e) {
+            var checkbox = $(this);
+            if (!checkbox.is(":checked") && $(this)[0].style.accentColor === 'green') {
+                e.preventDefault();
+            }
+        });
     });
 </script>

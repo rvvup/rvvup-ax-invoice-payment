@@ -4,9 +4,9 @@
       layout="1column">
     <body>
         <referenceContainer name="content">
-            <block class="Rvvup\AxInvoicePayment\Block\Success"
+            <block class="Rvvup\AxInvoicePayment\Block\Info"
                    name="ax_invoice_data"
-                   template="Rvvup_AxInvoicePayment::redirect/success.phtml"/>
+                   template="Rvvup_AxInvoicePayment::invoice/in.phtml"/>
         </referenceContainer>
     </body>
 </page>
