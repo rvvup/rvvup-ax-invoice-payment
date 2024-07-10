@@ -49,7 +49,7 @@ list($text, $invoices, $displayId) = $block->getDisplayInformation();
             var invoiceParameter = '<?= $block->getInvoiceParameterUsed() ?>';
             var selectedInvoices = [];
             $('.invoice-checkbox:checked').each(function() {
-                if ($(this)[0].style.accentColor !== 'green') {
+                if ($(this)[0].style.accentColor !== 'green' && !$(this)[0].disabled) {
                     selectedInvoices.push($(this)[0].attributes.invoice_id.value);
                 }
             });
