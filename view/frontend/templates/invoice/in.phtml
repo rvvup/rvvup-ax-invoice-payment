@@ -24,6 +24,7 @@ list($text, $invoices, $displayId) = $block->getDisplayInformation();
                 <input type="checkbox" class="invoice-checkbox" data-bind="attr: {'invoice_id': '<?= $invoice->getInvoiceNumber() ?>'}"
                     <?= $invoice->getIsRecent() ? 'checked style="accent-color:green"' : ''; ?>
                     <?= $invoice->getIsPayed() ? 'checked' : ''; ?>
+                    <?= ($invoice->getIsPayed() && !$invoice->getIsRecent()) ? 'disabled' : ''; ?>
                 >
             </td>
             <td><?= $invoice->getDate() ?></td>
@@ -91,7 +92,7 @@ list($text, $invoices, $displayId) = $block->getDisplayInformation();
     ], function($) {
         $('input[type="checkbox"]').on("click", function (e) {
             var checkbox = $(this);
-            if (!checkbox.is(":checked")) {
+            if (!checkbox.is(":checked") && $(this)[0].style.accentColor === 'green') {
                 e.preventDefault();
             }
         });
