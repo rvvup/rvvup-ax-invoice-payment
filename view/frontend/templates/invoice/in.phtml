@@ -1,0 +1,23 @@
+<?php
+/** @var \Rvvup\AxInvoicePayment\Block\Info $block */
+if (!$escaper) {
+    $escaper = $block;
+}
+$paymentUrl = $block->getUrl('statement/process/pay');
+?>
+<button id="rvvup-payment"><?= __('Pay Now') ?></button>
+<script type="text/javascript">
+    require([
+        'Rvvup_AxInvoicePayment/js/rvvup-checkout'
+    ], function(rvvupCheckout) {
+        var button = document.getElementById('rvvup-payment');
+        button.addEventListener('click', function() {
+            var statementId = '<?= $block->getParam('id') ?>';
+            var companyId = '<?= $block->getParam('company_id') ?>';
+            var accountNumber = '<?= $block->getParam('account_number') ?>';
+            var url = '<?= $paymentUrl ?>';
+            button.disabled = true;
+            rvvupCheckout.createCheckout(url, statementId, companyId, accountNumber);
+        }, false);
+    });
+</script>

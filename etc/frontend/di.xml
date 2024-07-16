@@ -1,11 +1,38 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-    <type name="Rvvup\AxInvoicePayment\Controller\Invoice\Pay">
+    <type name="Rvvup\AxInvoicePayment\Controller\Process\Pay">
         <arguments>
-            <argument name="logger" xsi:type="object">Rvvup\Payments\Model\Logger</argument>
+            <argument name="logger" xsi:type="object">Rvvup\AxInvoicePayment\Logger\Statement</argument>
         </arguments>
     </type>
-    <preference for="Rvvup\AxInvoicePayment\Api\GetInvoice" type="Rvvup\AxInvoicePayment\Model\GetInvoice"/>
-    <preference for="Rvvup\AxInvoicePayment\Api\UpdateInvoice" type="Rvvup\AxInvoicePayment\Model\UpdateInvoice"/>
+
+    <virtualType name="Rvvup\AxInvoicePayment\Logger\Statement"
+                 type="Magento\Framework\Logger\Monolog">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="debug" xsi:type="object">
+                    RvvupStatementLogHandler
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="RvvupStatementLogHandler" type="\Magento\Framework\Logger\Handler\Base">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+            <argument name="fileName" xsi:type="string">/var/log/rvvup-statement.log</argument>
+        </arguments>
+    </virtualType>
+    <type name="Magento\Framework\App\RouterList">
+        <arguments>
+            <argument name="routerList" xsi:type="array">
+                <item name="rvvup_ax" xsi:type="array">
+                    <item name="class" xsi:type="string">Rvvup\AxInvoicePayment\Controller\Router</item>
+                    <item name="disable" xsi:type="boolean">false</item>
+                    <item name="sortOrder" xsi:type="string">10</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
 </config>

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+    <route url="/V1/rvvup/statements/get/:id" method="GET">
+        <service class="Rvvup\AxInvoicePayment\Api\GetInvoiceInterface" method="getListOfInvoicesById"/>
+        <resources>
+            <resource ref="Rvvup_AxInvoicePayment::manage"/>
+        </resources>
+    </route>
+
+    <route url="/V1/rvvup/statements/update/:id" method="POST">
+        <service class="Rvvup\AxInvoicePayment\Api\UpdateInvoiceInterface" method="updateInvoiceById"/>
+        <resources>
+            <resource ref="Rvvup_AxInvoicePayment::manage"/>
+        </resources>
+    </route>
+</routes>
