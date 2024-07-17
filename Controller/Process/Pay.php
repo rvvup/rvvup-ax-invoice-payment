@@ -90,7 +90,7 @@ class Pay implements HttpPostActionInterface
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
         try {
-            $url = $this->createCheckout(
+            $url = $this->createAccountStatement(
                 $statementId,
                 $companyId,
                 $accountNumber
@@ -115,7 +115,7 @@ class Pay implements HttpPostActionInterface
      * @return string
      * @throws InputException
      */
-    private function createCheckout(
+    private function createAccountStatement(
         string $statementId,
         string $companyId,
         string $accountId

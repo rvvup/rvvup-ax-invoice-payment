@@ -17,7 +17,7 @@ $paymentUrl = $block->getUrl('statement/process/pay');
             var accountNumber = '<?= $block->getParam('account_number') ?>';
             var url = '<?= $paymentUrl ?>';
             button.disabled = true;
-            rvvupCheckout.createCheckout(url, statementId, companyId, accountNumber);
+            rvvupCheckout.createAccountStatement(url, statementId, companyId, accountNumber);
         }, false);
     });
 </script>
