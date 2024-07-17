@@ -6,10 +6,8 @@ namespace Rvvup\AxInvoicePayment\Api;
 interface UpdateInvoiceInterface
 {
     /**
-     * @param string $invoiceId
-     * @param string $accountId
-     * @param string $companyId
+     * @param string $data
      * @return void
      */
-    public function updateInvoiceById(string $invoiceId, string $accountId, string $companyId): void;
+    public function updateInvoiceById(string $data): void;
 }

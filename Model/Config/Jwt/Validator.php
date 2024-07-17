@@ -63,7 +63,7 @@ class Validator extends ArraySerialized
         foreach ($value as $key => $element) {
             $validate = $this->validate($element);
             if (!$validate['is_encrypted']) {
-                $element['jwt_key'] = $this->encryptor->encrypt($element['jwt_key']);
+                $element['api_key'] = $this->encryptor->encrypt($element['api_key']);
             }
             $value[$key] = $element;
         }
@@ -79,10 +79,10 @@ class Validator extends ArraySerialized
     private function validate(array $element): array
     {
         $encrypted = false;
-        $parts = explode('.', $element['jwt_key']);
+        $parts = explode('.', $element['api_key']);
         $message = __('API key is invalid for company ' . $element['company']);
         if (count($parts) !== 3) {
-            $value = $this->encryptor->decrypt($element['jwt_key']);
+            $value = $this->encryptor->decrypt($element['api_key']);
             $parts = explode('.', $value);
             $encrypted = true;
             if (count($parts) !== 3) {

@@ -74,6 +74,7 @@ class GetInvoice implements GetInvoiceInterface
 
         $result = $this->invoiceInterfaceFactory->create();
         $result->setStatementId($id);
+        $result->setCompanyId('companyId');
         $result->setAccountId('accountId');
         $result->setInvoices($items);
         return $result;

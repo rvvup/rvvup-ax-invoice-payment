@@ -39,4 +39,20 @@ class Invoice extends DataObject implements InvoiceInterface
     {
         return $this->setData(self::INVOICES, $invoices);
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function getCompanyId(): ?string
+    {
+        return $this->getData(self::COMPANY_ID);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setCompanyId(string $id): InvoiceInterface
+    {
+        return $this->setData(self::COMPANY_ID, $id);
+    }
 }

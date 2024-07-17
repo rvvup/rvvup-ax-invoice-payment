@@ -12,7 +12,7 @@ class DynamicRows extends AbstractFieldArray
     protected function _prepareToRender()
     {
         $this->addColumn('company', ['label' => __('Company'), 'class' => 'required-entry']);
-        $this->addColumn('jwt_key', ['label' => __('JWT Key'), 'class' => 'required-entry']);
+        $this->addColumn('api_key', ['label' => __('API Key'), 'class' => 'required-entry']);
         $this->_addAfter = false;
         $this->_addButtonLabel = __('Add Row');
     }

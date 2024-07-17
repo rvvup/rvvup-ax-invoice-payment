@@ -13,9 +13,7 @@
             <resource ref="Rvvup_AxInvoicePayment::manage"/>
         </resources>
         <data>
-            <parameter name="invoiceId" force="true">%invoice_id%</parameter>
-            <parameter name="accountId" force="true">%account_id%</parameter>
-            <parameter name="companyId" force="true">%company_id%</parameter>
+            <parameter name="data" force="true">%data%</parameter>
         </data>
     </route>
 </routes>

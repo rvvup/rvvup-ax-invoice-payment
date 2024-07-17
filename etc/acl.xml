@@ -5,7 +5,7 @@
             <resource id="Magento_Backend::admin">
                 <resource id="Magento_Backend::system">
                     <resource id="Magento_ServicesId::services" title="Services" sortOrder="100">
-                        <resource id="Rvvup_AxInvoicePayment::manage" title="Rvvup Ax Management"/>
+                        <resource id="Rvvup_AxInvoicePayment::manage" title="Rvvup ERP Proxy"/>
                     </resource>
                 </resource>
             </resource>

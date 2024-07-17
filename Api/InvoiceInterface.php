@@ -10,6 +10,7 @@ interface InvoiceInterface
     const STATEMENT_ID = 'statementId';
     const ACCOUNT_ID = 'accountId';
     const INVOICES = 'invoices';
+    const COMPANY_ID = 'companyId';
 
     /**
      * @return string|null
@@ -43,4 +44,15 @@ interface InvoiceInterface
      * @return InvoiceInterface
      */
     public function setInvoices(array $invoices): InvoiceInterface;
+
+    /**
+     * @return string|null
+     */
+    public function getCompanyId(): ?string;
+
+    /**
+     * @param string $id
+     * @return InvoiceInterface
+     */
+    public function setCompanyId(string $id): InvoiceInterface;
 }

@@ -10,7 +10,7 @@ class UpdateInvoice implements UpdateInvoiceInterface
     /**
      * @inheritDoc
      */
-    public function updateInvoiceById(string $invoiceId, string $accountId, string $companyId): void
+    public function updateInvoiceById(string $data): void
     {
         // TODO: Implement updateInvoiceById() method.
     }

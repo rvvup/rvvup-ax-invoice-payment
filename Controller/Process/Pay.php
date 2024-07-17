@@ -210,12 +210,12 @@ class Pay implements HttpPostActionInterface
         foreach ($value as $entry) {
             if ($entry['company'] === $companyId) {
                 if ($encrypted) {
-                    $jwt = $this->encryptor->decrypt($entry['jwt_key']);
+                    $jwt = $this->encryptor->decrypt($entry['api_key']);
                     $parts = explode('.', $jwt);
                     list($head, $body, $crypto) = $parts;
                     return $this->serializer->unserialize(base64_decode($body));
                 } else {
-                    return ['jwt' => $this->encryptor->decrypt($entry['jwt_key'])];
+                    return ['jwt' => $this->encryptor->decrypt($entry['api_key'])];
                 }
             }
         }
