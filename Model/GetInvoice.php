@@ -1,59 +1,82 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Rvvup\AxInvoicePayment\Model;
 
-use Magento\Framework\DataObjectFactory;
-class GetInvoice implements \Rvvup\AxInvoicePayment\Api\GetInvoice
+use Rvvup\AxInvoicePayment\Api\GetInvoiceInterface;
+
+use Rvvup\AxInvoicePayment\Api\InvoiceInterface;
+use Rvvup\AxInvoicePayment\Api\InvoiceInterfaceFactory;
+use Rvvup\AxInvoicePayment\Api\InvoiceAmountInterface;
+use Rvvup\AxInvoicePayment\Api\InvoiceAmountInterfaceFactory;
+use Rvvup\AxInvoicePayment\Api\InvoiceDataInterface;
+use Rvvup\AxInvoicePayment\Api\InvoiceDataInterfaceFactory;
+
+class GetInvoice implements GetInvoiceInterface
 {
-    /** @var DataObjectFactory */
-    private $dataObjectFactory;
+    /**
+     * @var InvoiceInterfaceFactory
+     */
+    private $invoiceInterfaceFactory;
 
     /**
-     * @param DataObjectFactory $dataObjectFactory
+     * @var InvoiceAmountInterfaceFactory
+     */
+    private $invoiceAmountInterfaceFactory;
+
+    /**
+     * @var InvoiceDataInterfaceFactory
+     */
+    private $invoiceDataInterfaceFactory;
+
+    /**
+     * @param InvoiceInterfaceFactory $invoiceInterfaceFactory
      */
     public function __construct(
-        DataObjectFactory $dataObjectFactory
+        InvoiceInterfaceFactory $invoiceInterfaceFactory,
+        InvoiceAmountInterfaceFactory $invoiceAmountInterfaceFactory,
+        InvoiceDataInterfaceFactory $invoiceDataInterfaceFactory
     ) {
-        $this->dataObjectFactory = $dataObjectFactory;
+        $this->invoiceInterfaceFactory = $invoiceInterfaceFactory;
+        $this->invoiceAmountInterfaceFactory = $invoiceAmountInterfaceFactory;
+        $this->invoiceDataInterfaceFactory = $invoiceDataInterfaceFactory;
     }
-
     /**
      * @inheritDoc
      */
-    public function getInvoiceById(int $id): array
+    public function getListOfInvoicesById(string $id): InvoiceInterface
     {
-        return [$this->dataObjectFactory->create(
-            ['data' =>
-                [
-                    'date' => date('Y-m-d H:i:s', strtotime('now')),
-                    'invoice_number' => $id,
-                    'is_payed' => 0,
-                    'total' => rand(0, 999),
-                    'currency' => '£'
-                ]
-            ]
-        )];
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getListOfInvoicesById(int $id): array
-    {
+        $items = [];
         foreach (range(1, $id) as $item) {
-            $items[] = $this->dataObjectFactory->create(
-                ['data' =>
-                    [
-                        'date' => date('Y-m-d H:i:s', strtotime('now')),
-                        'invoice_number' => $item,
-                        'is_payed' => rand(0,1),
-                        'total' => rand(0, 999),
-                        'currency' => '£'
-                    ]
-                ]
-            );
+            /** @var InvoiceDataInterface $invoice */
+            $invoice = $this->invoiceDataInterfaceFactory->create();
+            $invoice->setReference((string) $item);
+            $invoice->setInvoiceDate(date('Y-m-d\TH:i:sP', strtotime('now')));
+
+            /** @var InvoiceAmountInterface $total */
+            $total = $this->invoiceAmountInterfaceFactory->create();
+            $total->setAmount((string)($item * 100));
+            $total->setCurrency('GBP');
+            $invoice->setTotal($total);
+
+            $amountRemaining = $this->invoiceAmountInterfaceFactory->create();
+            $amountRemaining->setAmount((string)($item * 100));
+            $amountRemaining->setCurrency('GBP');
+            $invoice->setAmountRemaining($amountRemaining);
+
+            $amountPaid = $this->invoiceAmountInterfaceFactory->create();
+            $amountPaid->setAmount('0');
+            $amountPaid->setCurrency('GBP');
+            $invoice->setAmountPaid($amountPaid);
+            $items[] = $invoice;
         }
-        return $items;
+
+        $result = $this->invoiceInterfaceFactory->create();
+        $result->setStatementId($id);
+        $result->setCompanyId('companyId');
+        $result->setAccountId('accountId');
+        $result->setInvoices($items);
+        return $result;
     }
 }

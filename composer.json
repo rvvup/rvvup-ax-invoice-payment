@@ -4,8 +4,7 @@
   "description": "N/A",
   "type": "magento2-module",
   "require": {
-    "magento/framework": "*",
-    "rvvup/module-magento-payments": "*"
+    "magento/framework": "*"
   },
   "license": "MIT",
   "autoload": {

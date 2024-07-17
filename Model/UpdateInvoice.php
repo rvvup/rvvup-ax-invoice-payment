@@ -3,12 +3,15 @@ declare(strict_types=1);
 
 namespace Rvvup\AxInvoicePayment\Model;
 
-class UpdateInvoice implements \Rvvup\AxInvoicePayment\Api\UpdateInvoice
+use Rvvup\AxInvoicePayment\Api\UpdateInvoiceInterface;
+
+class UpdateInvoice implements UpdateInvoiceInterface
 {
     /**
      * @inheritDoc
      */
-    public function updateInvoiceById(int $id): void
+    public function updateInvoiceById(string $data): void
     {
+        // TODO: Implement updateInvoiceById() method.
     }
 }
