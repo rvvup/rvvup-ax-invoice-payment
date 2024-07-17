@@ -2,6 +2,12 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <preference for="Rvvup\AxInvoicePayment\Api\GetInvoiceInterface" type="Rvvup\AxInvoicePayment\Model\GetInvoice"/>
+    <preference for="Rvvup\AxInvoicePayment\Api\InvoiceInterface"
+                type="Rvvup\AxInvoicePayment\Model\Invoice"/>
+    <preference for="Rvvup\AxInvoicePayment\Api\InvoiceDataInterface"
+                type="Rvvup\AxInvoicePayment\Model\InvoiceData"/>
+    <preference for="Rvvup\AxInvoicePayment\Api\InvoiceAmountInterface"
+                type="Rvvup\AxInvoicePayment\Model\InvoiceAmount"/>
     <preference for="Rvvup\AxInvoicePayment\Api\UpdateInvoiceInterface"
                 type="Rvvup\AxInvoicePayment\Model\UpdateInvoice"/>
 </config>
