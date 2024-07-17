@@ -52,7 +52,7 @@ class GetInvoice implements GetInvoiceInterface
             /** @var InvoiceDataInterface $invoice */
             $invoice = $this->invoiceDataInterfaceFactory->create();
             $invoice->setReference((string) $item);
-            $invoice->setInvoiceDate(date('Y-m-d H:i:s', strtotime('now')));
+            $invoice->setInvoiceDate(date('Y-m-d\TH:i:sP', strtotime('now')));
 
             /** @var InvoiceAmountInterface $total */
             $total = $this->invoiceAmountInterfaceFactory->create();

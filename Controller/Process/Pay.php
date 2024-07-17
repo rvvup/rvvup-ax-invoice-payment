@@ -146,6 +146,15 @@ class Pay implements HttpPostActionInterface
         string $accountId
     ): array
     {
+        $invoices = $this->getInvoice->getListOfInvoicesById($statementId)->getInvoices();
+        $invoiceArray = array_map(function($invoice) {
+            $data = $invoice->toArray();
+            $data['total'] = $data['total']->toArray();
+            $data['amountRemaining'] = $data['amountRemaining']->toArray();
+            $data['amountPaid'] = $data['amountPaid']->toArray();
+            return $data;
+        }, $invoices);
+
         $postData = [
             "connection" => [
                 "type" => "MAGENTO_PROXY",
@@ -153,7 +162,7 @@ class Pay implements HttpPostActionInterface
                 "companyId" => $companyId,
                 "accountId" => $accountId
             ],
-            "invoices" => $this->getInvoice->getListOfInvoicesById($statementId)[0]['invoices']
+            "invoices" => $invoiceArray
         ];
         $headers = $this->getHeaders($companyId);
 
