@@ -34,7 +34,7 @@ class Index implements HttpGetActionInterface
     {
         $page = $this->pageFactory->create();
         if ($this->config->getValue(Pay::PAYMENT_RVVUP_AX_INTEGRATION . '/active') != 1) {
-            $page->getLayout()->getUpdate()->removeHandle('statement_index_index');
+            $page->getLayout()->getUpdate()->removeHandle('statements_index_index');
         }
         return $page;
     }

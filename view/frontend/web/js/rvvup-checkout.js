@@ -3,7 +3,6 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
     return {
         createAccountStatement: function (
             url,
-            statement_id,
             company_id,
             account_number
         ) {
@@ -11,7 +10,6 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
                 url: url,
                 type: 'POST',
                 data: {
-                    'statement_id' : statement_id,
                     'company_id' : company_id,
                     'account_number' : account_number
                 },

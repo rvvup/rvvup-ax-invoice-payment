@@ -84,14 +84,12 @@ class Pay implements HttpPostActionInterface
      */
     public function execute()
     {
-        $statementId = $this->request->getParam('statement_id');
         $companyId = $this->request->getParam('company_id');
         $accountNumber = $this->request->getParam('account_number');
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
         try {
             $url = $this->createAccountStatement(
-                $statementId,
                 $companyId,
                 $accountNumber
             );
@@ -109,19 +107,17 @@ class Pay implements HttpPostActionInterface
     }
 
     /**
-     * @param string $statementId
      * @param string $companyId
      * @param string $accountId
      * @return string
      * @throws InputException
      */
     private function createAccountStatement(
-        string $statementId,
         string $companyId,
         string $accountId
     ): string
     {
-        $params = $this->buildRequestData($statementId, $companyId, $accountId);
+        $params = $this->buildRequestData($companyId, $accountId);
         $request = $this->curl->request(
             Request::METHOD_POST,
             $this->getApiUrl($companyId),
@@ -135,36 +131,25 @@ class Pay implements HttpPostActionInterface
     }
 
     /**
-     * @param string $statementId
      * @param string $companyId
      * @param string $accountId
      * @return array
+     * @throws InputException
      */
     private function buildRequestData(
-        string $statementId,
         string $companyId,
         string $accountId
     ): array
     {
-        $invoices = $this->getInvoice->getListOfInvoicesById($statementId)->getInvoices();
-        $invoiceArray = array_map(function($invoice) {
-            $data = $invoice->toArray();
-            $data['total'] = $data['total']->toArray();
-            $data['amountRemaining'] = $data['amountRemaining']->toArray();
-            $data['amountPaid'] = $data['amountPaid']->toArray();
-            return $data;
-        }, $invoices);
-
         $postData = [
             "connection" => [
                 "type" => "MAGENTO_PROXY",
-                "statementId" => $statementId,
                 "companyId" => $companyId,
                 "accountId" => $accountId
             ],
-            "invoices" => $invoiceArray
+            'reference' => $companyId . ' ' . $accountId
         ];
-        $headers = $this->getHeaders($companyId);
+        $headers = $this->getHeaders($accountId, $companyId);
 
         return [
             'headers' => $headers,
@@ -173,16 +158,19 @@ class Pay implements HttpPostActionInterface
     }
 
     /**
+     * @param string $accountId
      * @param string $companyId
      * @return string[]
+     * @throws InputException
      */
-    private function getHeaders(string $companyId): array
+    private function getHeaders(string $accountId, string $companyId): array
     {
         $token = $this->getAuthToken($companyId);
         return [
             'Content-Type: application/json',
             'Accept: application/json',
-            'Authorization: Bearer ' . $token
+            'Authorization: Bearer ' . $token,
+            'Idempotency-Key: ' . $accountId . $companyId
         ];
     }
 
@@ -236,6 +224,7 @@ class Pay implements HttpPostActionInterface
     /**
      * @param string $companyId
      * @return string
+     * @throws InputException
      */
     private function getMerchantId(string $companyId): string
     {

@@ -34,14 +34,13 @@ class Router implements RouterInterface
     public function match(RequestInterface $request)
     {
         $identifier = trim($request->getPathInfo(), '/');
-        if (preg_match('#^statement/(\d+)/(\d+)/([\d\w]+)$#', $identifier, $matches)) {
+        if (preg_match('#^statements/([\d\w]+)/(\d+)$#', $identifier, $matches)) {
             $request->setModuleName('statement')
-                ->setRouteName('statement')
+                ->setRouteName('statements')
                 ->setControllerName('index')
                 ->setActionName('index')
-                ->setParam('id', $matches[1])
-                ->setParam('account_number', $matches[2])
-                ->setParam('company_id', $matches[3]);
+                ->setParam('company_id', $matches[1])
+                ->setParam('account_number', $matches[2]);
             return $this->actionFactory->create(Index::class);
         }
         return null;
