@@ -125,7 +125,7 @@ class InvoiceData extends DataObject implements InvoiceDataInterface
     /**
      * @inheritDoc
      */
-    public function getTotalVAT(): float
+    public function getTotalVat(): float
     {
         return $this->getData(self::TOTAL_VAT);
     }
@@ -133,9 +133,9 @@ class InvoiceData extends DataObject implements InvoiceDataInterface
     /**
      * @inheritDoc
      */
-    public function setTotalVAT(float $totalVAT): InvoiceDataInterface
+    public function setTotalVat(float $totalVat): InvoiceDataInterface
     {
-        return $this->setData(self::TOTAL_VAT, $totalVAT);
+        return $this->setData(self::TOTAL_VAT, $totalVat);
     }
 
     /**

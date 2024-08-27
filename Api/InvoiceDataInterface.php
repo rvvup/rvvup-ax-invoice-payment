@@ -98,13 +98,13 @@ interface InvoiceDataInterface
     /**
      * @return float
      */
-    public function getTotalVAT(): float;
+    public function getTotalVat(): float;
 
     /**
-     * @param float $totalVAT
+     * @param float $totalVat
      * @return InvoiceDataInterface
      */
-    public function setTotalVAT(float $totalVAT): InvoiceDataInterface;
+    public function setTotalVat(float $totalVat): InvoiceDataInterface;
 
     /**
      * @return float
