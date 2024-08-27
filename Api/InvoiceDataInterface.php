@@ -12,7 +12,7 @@ interface InvoiceDataInterface
     const CHANNEL_DEPT = 'ChannelDept';
     const CUSTOMER_REF = 'CustomerRef';
     const TOTAL_NET = 'TotalNet';
-    const TOTAL_VAT = 'TotalVAT';
+    const TOTAL_VAT = 'TotalVat';
     const TOTAL_GROSS = 'TotalGross';
     const OUTSTANDING = 'Outstanding';
     const CURRENCY = 'Currency';
