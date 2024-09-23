@@ -17,7 +17,7 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
                     if (data.success !== true) {
                         document.getElementById('rvvup-payment').disabled = false;
                         alert({
-                            content: 'Failed to get statement, please message store owner'
+                            content: 'We are unable to get this statement at the moment, please try again later'
                         });
                         return;
                     }
@@ -27,14 +27,14 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
                     } else {
                         document.getElementById('rvvup-payment').disabled = false;
                         alert({
-                            content: 'Failed to get statement, please message store owner'
+                            content: 'We are unable to get this statement at the moment, please try again later'
                         });
                     }
                 },
                 error: function () {
                     document.getElementById('rvvup-payment').disabled = false;
                     alert({
-                        content: 'Failed to get statement, please message store owner'
+                        content: 'We are unable to get this statement at the moment, please try again later'
                     });
                 }
             })
