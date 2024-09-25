@@ -7,7 +7,7 @@ interface UpdateInvoiceInterface
 {
     /**
      * @param string $data
-     * @return void
+     * @return string
      */
-    public function updateInvoiceById(string $data): void;
+    public function updateInvoiceById(string $data): array;
 }
