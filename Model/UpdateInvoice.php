@@ -12,6 +12,6 @@ class UpdateInvoice implements UpdateInvoiceInterface
      */
     public function updateInvoiceById(string $data): array
     {
-        // TODO: Implement updateInvoiceById() method.
+        return [];
     }
 }
