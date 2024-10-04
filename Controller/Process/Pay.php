@@ -147,7 +147,7 @@ class Pay implements HttpPostActionInterface
                 "companyId" => $companyId,
                 "accountId" => $accountId
             ],
-            'reference' => $companyId . ' ' . $accountId
+            'reference' => $accountId
         ];
         $headers = $this->getHeaders($accountId, $companyId);
 
