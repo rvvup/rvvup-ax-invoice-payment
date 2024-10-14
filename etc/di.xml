@@ -13,4 +13,6 @@
                 type="Rvvup\AxInvoicePayment\Model\HeaderData"/>
     <preference for="Rvvup\AxInvoicePayment\Api\InvoiceDataInterface"
                 type="Rvvup\AxInvoicePayment\Model\InvoiceData"/>
+    <preference for="Rvvup\AxInvoicePayment\Model\Environment\GetEnvironmentVersionsInterface"
+                type="Rvvup\AxInvoicePayment\Model\Environment\GetEnvironmentVersions"/>
 </config>

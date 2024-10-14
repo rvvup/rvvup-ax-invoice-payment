@@ -13,6 +13,7 @@ use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Psr\Log\LoggerInterface;
+use Rvvup\AxInvoicePayment\Model\UserAgentBuilder;
 use Rvvup\AxInvoicePayment\Sdk\Curl;
 
 class Rvvalytix implements HttpPostActionInterface
@@ -39,6 +40,9 @@ class Rvvalytix implements HttpPostActionInterface
     /** @var Json */
     private $serializer;
 
+    /** @var UserAgentBuilder */
+    private $userAgentBuilder;
+
     /**
      * @param ScopeConfigInterface $config
      * @param LoggerInterface $logger
@@ -47,6 +51,7 @@ class Rvvalytix implements HttpPostActionInterface
      * @param ResultFactory $resultFactory
      * @param EncryptorInterface $encryptor
      * @param Json $serializer
+     * @param UserAgentBuilder $userAgentBuilder
      */
     public function __construct(
         ScopeConfigInterface $config,
@@ -55,7 +60,8 @@ class Rvvalytix implements HttpPostActionInterface
         RequestInterface     $request,
         ResultFactory        $resultFactory,
         EncryptorInterface   $encryptor,
-        Json                 $serializer
+        Json                 $serializer,
+        UserAgentBuilder     $userAgentBuilder
     )
     {
         $this->logger = $logger;
@@ -65,6 +71,7 @@ class Rvvalytix implements HttpPostActionInterface
         $this->resultFactory = $resultFactory;
         $this->encryptor = $encryptor;
         $this->serializer = $serializer;
+        $this->userAgentBuilder = $userAgentBuilder;
     }
 
     /**
@@ -125,7 +132,9 @@ class Rvvalytix implements HttpPostActionInterface
     /**
      * @param string $companyId
      * @param string $accountId
+     * @param string $invoiceId
      * @param string $type
+     * @param string $date
      * @return array
      * @throws InputException
      */
@@ -170,6 +179,7 @@ class Rvvalytix implements HttpPostActionInterface
         return [
             'Content-Type: application/json',
             'Accept: application/json',
+            'User-Agent: ' . $this->userAgentBuilder->get(),
             'Authorization: Bearer ' . $token,
         ];
     }
