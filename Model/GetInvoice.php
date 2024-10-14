@@ -57,7 +57,7 @@ class GetInvoice implements GetInvoiceInterface
     /**
      * @inheritDoc
      */
-    public function getListOfInvoicesById(string $companyId, string $accountId): ResponseInterface
+    public function getListOfInvoicesById(string $companyId, string $accountId, string $invoiceId): ResponseInterface
     {
         $items = [];
         foreach (range(1, 5) as $item) {

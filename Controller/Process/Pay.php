@@ -86,13 +86,11 @@ class Pay implements HttpPostActionInterface
     {
         $companyId = $this->request->getParam('company_id');
         $accountNumber = $this->request->getParam('account_number');
+        $invoiceId = $this->request->getParam('invoice_id');
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
         try {
-            $url = $this->createAccountStatement(
-                $companyId,
-                $accountNumber
-            );
+            $url = $this->createAccountStatement($companyId, $accountNumber, $invoiceId);
             $result->setData([
                 'url' => $url,
                 'success' => true
@@ -109,15 +107,17 @@ class Pay implements HttpPostActionInterface
     /**
      * @param string $companyId
      * @param string $accountId
+     * @param string $invoiceId
      * @return string
      * @throws InputException
      */
     private function createAccountStatement(
         string $companyId,
-        string $accountId
+        string $accountId,
+        string $invoiceId
     ): string
     {
-        $params = $this->buildRequestData($companyId, $accountId);
+        $params = $this->buildRequestData($companyId, $accountId, $invoiceId);
         $request = $this->curl->request(
             Request::METHOD_POST,
             $this->getApiUrl($companyId),
@@ -133,19 +133,22 @@ class Pay implements HttpPostActionInterface
     /**
      * @param string $companyId
      * @param string $accountId
+     * @param string $invoiceId
      * @return array
      * @throws InputException
      */
     private function buildRequestData(
         string $companyId,
-        string $accountId
+        string $accountId,
+        string $invoiceId
     ): array
     {
         $postData = [
             "connection" => [
                 "type" => "MAGENTO_PROXY",
                 "companyId" => $companyId,
-                "accountId" => $accountId
+                "accountId" => $accountId,
+                "invoiceId" => $invoiceId
             ],
             'reference' => $accountId
         ];
@@ -174,9 +177,10 @@ class Pay implements HttpPostActionInterface
         ];
     }
 
-    /** @param string $storeId
+    /**
+     * @param string $companyId
      * @return string
-     * @todo move to rest api sdk
+     * @throws InputException @todo move to rest api sdk
      */
     private function getApiUrl(string $companyId): string
     {

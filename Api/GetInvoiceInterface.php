@@ -10,7 +10,8 @@ interface GetInvoiceInterface
     /**
      * @param string $companyId
      * @param string $accountId
+     * @param string $invoiceId
      * @return ResponseInterface
      */
-    public function getListOfInvoicesById(string $companyId, string $accountId): ResponseInterface;
+    public function getListOfInvoicesById(string $companyId, string $accountId, string $invoiceId): ResponseInterface;
 }
