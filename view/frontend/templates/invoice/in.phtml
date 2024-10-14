@@ -4,20 +4,36 @@ if (!$escaper) {
     $escaper = $block;
 }
 $paymentUrl = $block->getUrl('statements/process/pay');
+$rvvalytixUrl = $block->getUrl('statements/process/rvvalytix');
 ?>
 <button id="rvvup-payment"><?= __('Pay Now') ?></button>
 <script type="text/javascript">
     require([
         'Rvvup_AxInvoicePayment/js/rvvup-checkout'
-    ], function(rvvupCheckout) {
+    ], function (rvvupCheckout) {
         var button = document.getElementById('rvvup-payment');
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             var companyId = '<?= $block->getParam('company_id') ?>';
             var accountNumber = '<?= $block->getParam('account_number') ?>';
             var invoiceId = '<?= $block->getParam('invoice_id') ?>';
-            var url = '<?= $paymentUrl ?>';
+            var paymentUrl = '<?= $paymentUrl ?>';
+            var rvvalytixUrl = '<?= $rvvalytixUrl ?>';
             button.disabled = true;
-            rvvupCheckout.createAccountStatement(url, companyId, accountNumber, invoiceId);
+
+            rvvupCheckout.payClicked(rvvalytixUrl, companyId, accountNumber, invoiceId);
+            rvvupCheckout.createAccountStatement(paymentUrl, companyId, accountNumber, invoiceId);
         }, false);
+    });
+</script>
+<script type="text/javascript">
+    require([
+        'Rvvup_AxInvoicePayment/js/rvvup-checkout'
+    ], function (rvvupCheckout) {
+        var companyId = '<?= $block->getParam('company_id') ?>';
+        var accountNumber = '<?= $block->getParam('account_number') ?>';
+        var invoiceId = '<?= $block->getParam('invoice_id') ?>';
+        var url = '<?= $rvvalytixUrl ?>';
+
+        rvvupCheckout.landingPage(url, companyId, accountNumber, invoiceId);
     });
 </script>

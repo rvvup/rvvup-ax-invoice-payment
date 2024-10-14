@@ -7,6 +7,12 @@
         </arguments>
     </type>
 
+    <type name="Rvvup\AxInvoicePayment\Controller\Process\Rvvalytix">
+        <arguments>
+            <argument name="logger" xsi:type="object">Rvvup\AxInvoicePayment\Logger\Statement</argument>
+        </arguments>
+    </type>
+
     <virtualType name="Rvvup\AxInvoicePayment\Logger\Statement"
                  type="Magento\Framework\Logger\Monolog">
         <arguments>

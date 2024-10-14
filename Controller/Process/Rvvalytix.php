@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Rvvup\AxInvoicePayment\Controller\Process;
 
+use DateTime;
 use Laminas\Http\Request;
-use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Serialize\Serializer\Json;
-use Magento\Framework\Serialize\SerializerInterface;
-use Magento\Framework\Encryption\EncryptorInterface;
 use Psr\Log\LoggerInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Rvvup\AxInvoicePayment\Sdk\Curl;
 
-class Pay implements HttpPostActionInterface
+class Rvvalytix implements HttpPostActionInterface
 {
     public const PAYMENT_RVVUP_AX_INTEGRATION = 'payment/rvvup_ax_integration';
     /** @var LoggerInterface */
@@ -26,9 +26,6 @@ class Pay implements HttpPostActionInterface
 
     /** @var Curl */
     private $curl;
-
-    /** @var SerializerInterface */
-    private $json;
 
     /** @var RequestInterface */
     private $request;
@@ -46,7 +43,6 @@ class Pay implements HttpPostActionInterface
      * @param ScopeConfigInterface $config
      * @param LoggerInterface $logger
      * @param Curl $curl
-     * @param SerializerInterface $json
      * @param RequestInterface $request
      * @param ResultFactory $resultFactory
      * @param EncryptorInterface $encryptor
@@ -56,16 +52,15 @@ class Pay implements HttpPostActionInterface
         ScopeConfigInterface $config,
         LoggerInterface      $logger,
         Curl                 $curl,
-        SerializerInterface  $json,
         RequestInterface     $request,
         ResultFactory        $resultFactory,
         EncryptorInterface   $encryptor,
         Json                 $serializer
-    ) {
+    )
+    {
         $this->logger = $logger;
         $this->config = $config;
         $this->curl = $curl;
-        $this->json = $json;
         $this->request = $request;
         $this->resultFactory = $resultFactory;
         $this->encryptor = $encryptor;
@@ -81,15 +76,22 @@ class Pay implements HttpPostActionInterface
         $accountNumber = $this->request->getParam('account_number');
         $invoiceId = $this->request->getParam('invoice_id');
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+        $date = (new DateTime('now'))->format(DateTime::ATOM);
 
         try {
-            $url = $this->createAccountStatement($companyId, $accountNumber, $invoiceId);
+            $type = $this->mapType($this->request->getParam('type'));
+            $this->sendEvent(
+                $companyId,
+                $accountNumber,
+                $invoiceId,
+                $type,
+                $date
+            );
             $result->setData([
-                'url' => $url,
                 'success' => true
             ]);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to create Rvvup checkout', [$e->getMessage()]);
+            $this->logger->error('Failed to send Rvvup event', [$e->getMessage()]);
             $result->setData([
                 'success' => false
             ]);
@@ -101,51 +103,55 @@ class Pay implements HttpPostActionInterface
      * @param string $companyId
      * @param string $accountId
      * @param string $invoiceId
-     * @return string
+     * @param string $type
      * @throws InputException
      */
-    private function createAccountStatement(
+    private function sendEvent(
         string $companyId,
         string $accountId,
-        string $invoiceId
-    ): string
+        string $invoiceId,
+        string $type,
+        string $date
+    )
     {
-        $params = $this->buildRequestData($companyId, $accountId, $invoiceId);
-        $request = $this->curl->request(
+        $params = $this->buildRequestData($companyId, $accountId, $invoiceId, $type, $date);
+        $this->curl->request(
             Request::METHOD_POST,
             $this->getApiUrl($companyId),
             $params
         );
-        $body = $this->json->unserialize($request->body);
-        if (isset($body['url'])) {
-            return $body['url'];
-        };
-        throw new InputException(__('Missing returnUrl from Rvvup'));
     }
 
     /**
      * @param string $companyId
      * @param string $accountId
-     * @param string $invoiceId
+     * @param string $type
      * @return array
      * @throws InputException
      */
     private function buildRequestData(
         string $companyId,
         string $accountId,
-        string $invoiceId
+        string $invoiceId,
+        string $type,
+        string $date
     ): array
     {
         $postData = [
-            "connection" => [
-                "type" => "MAGENTO_PROXY",
-                "companyId" => $companyId,
-                "accountId" => $accountId,
-                "invoiceId" => $invoiceId
+            "events" => [
+                [
+                    "merchantId" => $this->getMerchantId($companyId),
+                    "name" => $type,
+                    "data" => [
+                        "companyId" => $companyId,
+                        "accountId" => $accountId,
+                        "invoiceId" => $invoiceId
+                    ],
+                    "originCreatedAt" => $date,
+                ]
             ],
-            'reference' => $accountId
         ];
-        $headers = $this->getHeaders($accountId, $companyId);
+        $headers = $this->getHeaders($companyId);
 
         return [
             'headers' => $headers,
@@ -154,20 +160,34 @@ class Pay implements HttpPostActionInterface
     }
 
     /**
-     * @param string $accountId
      * @param string $companyId
      * @return string[]
      * @throws InputException
      */
-    private function getHeaders(string $accountId, string $companyId): array
+    private function getHeaders(string $companyId): array
     {
         $token = $this->getAuthToken($companyId);
         return [
             'Content-Type: application/json',
             'Accept: application/json',
             'Authorization: Bearer ' . $token,
-            'Idempotency-Key: ' . $accountId . $companyId
         ];
+    }
+
+    /**
+     * @param string $type
+     * @return string
+     * @throws InputException
+     */
+    private function mapType(string $type): string
+    {
+        switch ($type) {
+            case 'landing':
+                return "ACCOUNT_STATEMENT_PLUGIN_PAGE_RENDERED";
+            case 'pay_clicked':
+                return "ACCOUNT_STATEMENT_PLUGIN_PAGE_PAY_CLICKED";
+        }
+        throw new InputException(__('Invalid type ' . $type));
     }
 
     /**
@@ -177,9 +197,8 @@ class Pay implements HttpPostActionInterface
      */
     private function getApiUrl(string $companyId): string
     {
-        $merchantId = $this->getMerchantId($companyId);
         $baseUrl = $this->getEndpoint($companyId);
-        return str_replace('graphql', "api/2024-03-01/$merchantId/accounts/statements", $baseUrl);
+        return str_replace('graphql', "rvvalytix", $baseUrl);
     }
 
     /**
@@ -226,16 +245,17 @@ class Pay implements HttpPostActionInterface
     private function getMerchantId(string $companyId): string
     {
         $jwt = $this->getJwt($companyId);
-        return (string) $jwt['merchantId'];
+        return (string)$jwt['merchantId'];
     }
 
     /**
      * @param string $companyId
      * @return string
+     * @throws InputException
      */
     private function getEndpoint(string $companyId): string
     {
         $jwt = $this->getJwt($companyId);
-        return (string) $jwt['aud'];
+        return (string)$jwt['aud'];
     }
 }
