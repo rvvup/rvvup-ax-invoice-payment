@@ -4,14 +4,16 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
         createAccountStatement: function (
             url,
             company_id,
-            account_number
+            account_number,
+            invoice_id
         ) {
             $.ajax({
                 url: url,
                 type: 'POST',
                 data: {
                     'company_id' : company_id,
-                    'account_number' : account_number
+                    'account_number' : account_number,
+                    'invoice_id' : invoice_id
                 },
                 success: function (data) {
                     if (data.success !== true) {

@@ -14,9 +14,10 @@ $paymentUrl = $block->getUrl('statements/process/pay');
         button.addEventListener('click', function() {
             var companyId = '<?= $block->getParam('company_id') ?>';
             var accountNumber = '<?= $block->getParam('account_number') ?>';
+            var invoiceId = '<?= $block->getParam('invoice_id') ?>';
             var url = '<?= $paymentUrl ?>';
             button.disabled = true;
-            rvvupCheckout.createAccountStatement(url, companyId, accountNumber);
+            rvvupCheckout.createAccountStatement(url, companyId, accountNumber, invoiceId);
         }, false);
     });
 </script>
