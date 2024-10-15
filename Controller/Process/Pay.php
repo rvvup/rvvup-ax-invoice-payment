@@ -4,15 +4,13 @@ declare(strict_types=1);
 namespace Rvvup\AxInvoicePayment\Controller\Process;
 
 use Laminas\Http\Request;
-use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\InputException;
-use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\Serialize\SerializerInterface;
-use Magento\Framework\Encryption\EncryptorInterface;
 use Psr\Log\LoggerInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
+use Rvvup\AxInvoicePayment\Model\Config\RvvupConfigProvider;
 use Rvvup\AxInvoicePayment\Model\UserAgentBuilder;
 use Rvvup\AxInvoicePayment\Sdk\Curl;
 
@@ -21,9 +19,6 @@ class Pay implements HttpPostActionInterface
     public const PAYMENT_RVVUP_AX_INTEGRATION = 'payment/rvvup_ax_integration';
     /** @var LoggerInterface */
     private $logger;
-
-    /** @var ScopeConfigInterface */
-    private $config;
 
     /** @var Curl */
     private $curl;
@@ -37,46 +32,38 @@ class Pay implements HttpPostActionInterface
     /** @var ResultFactory */
     private $resultFactory;
 
-    /** @var EncryptorInterface */
-    private $encryptor;
-
-    /** @var Json */
-    private $serializer;
-
     /** @var UserAgentBuilder */
     private $userAgentBuilder;
 
+    /** @var RvvupConfigProvider */
+    private $rvvupConfigProvider;
+
     /**
-     * @param ScopeConfigInterface $config
      * @param LoggerInterface $logger
      * @param Curl $curl
      * @param SerializerInterface $json
      * @param RequestInterface $request
      * @param ResultFactory $resultFactory
-     * @param EncryptorInterface $encryptor
-     * @param Json $serializer
      * @param UserAgentBuilder $userAgentBuilder
+     * @param RvvupConfigProvider $rvvupConfigProvider
      */
     public function __construct(
-        ScopeConfigInterface $config,
-        LoggerInterface      $logger,
-        Curl                 $curl,
-        SerializerInterface  $json,
-        RequestInterface     $request,
-        ResultFactory        $resultFactory,
-        EncryptorInterface   $encryptor,
-        Json                 $serializer,
-        UserAgentBuilder     $userAgentBuilder
-    ) {
+        LoggerInterface     $logger,
+        Curl                $curl,
+        SerializerInterface $json,
+        RequestInterface    $request,
+        ResultFactory       $resultFactory,
+        UserAgentBuilder    $userAgentBuilder,
+        RvvupConfigProvider $rvvupConfigProvider
+    )
+    {
         $this->logger = $logger;
-        $this->config = $config;
         $this->curl = $curl;
         $this->json = $json;
         $this->request = $request;
         $this->resultFactory = $resultFactory;
-        $this->encryptor = $encryptor;
-        $this->serializer = $serializer;
         $this->userAgentBuilder = $userAgentBuilder;
+        $this->rvvupConfigProvider = $rvvupConfigProvider;
     }
 
     /**
@@ -117,10 +104,14 @@ class Pay implements HttpPostActionInterface
         string $invoiceId
     ): string
     {
-        $params = $this->buildRequestData($companyId, $accountId, $invoiceId);
+        $rvvupConfig = $this->rvvupConfigProvider->getConfig($companyId);
+        $merchantId = $rvvupConfig['merchant_id'];
+        $baseUrl = $rvvupConfig['endpoint'];
+
+        $params = $this->buildRequestData($companyId, $accountId, $invoiceId, $rvvupConfig['auth_token']);
         $request = $this->curl->request(
             Request::METHOD_POST,
-            $this->getApiUrl($companyId),
+            str_replace('graphql', "api/2024-03-01/$merchantId/accounts/statements", $baseUrl),
             $params
         );
         $body = $this->json->unserialize($request->body);
@@ -134,13 +125,14 @@ class Pay implements HttpPostActionInterface
      * @param string $companyId
      * @param string $accountId
      * @param string $invoiceId
+     * @param string $authToken
      * @return array
-     * @throws InputException
      */
     private function buildRequestData(
         string $companyId,
         string $accountId,
-        string $invoiceId
+        string $invoiceId,
+        string $authToken
     ): array
     {
         $postData = [
@@ -152,7 +144,7 @@ class Pay implements HttpPostActionInterface
             ],
             'reference' => $accountId
         ];
-        $headers = $this->getHeaders($accountId, $companyId);
+        $headers = $this->getHeaders($accountId, $companyId, $authToken);
 
         return [
             'headers' => $headers,
@@ -163,87 +155,21 @@ class Pay implements HttpPostActionInterface
     /**
      * @param string $accountId
      * @param string $companyId
+     * @param string $authToken
      * @return string[]
-     * @throws InputException
      */
-    private function getHeaders(string $accountId, string $companyId): array
+    private function getHeaders(
+        string $accountId,
+        string $companyId,
+        string $authToken
+    ): array
     {
-        $token = $this->getAuthToken($companyId);
         return [
             'Content-Type: application/json',
             'Accept: application/json',
-            'Authorization: Bearer ' . $token,
+            'Authorization: Bearer ' . $authToken,
             'Idempotency-Key: ' . $accountId . $companyId,
             'User-Agent: ' . $this->userAgentBuilder->get()
         ];
-    }
-
-    /**
-     * @param string $companyId
-     * @return string
-     * @throws InputException @todo move to rest api sdk
-     */
-    private function getApiUrl(string $companyId): string
-    {
-        $merchantId = $this->getMerchantId($companyId);
-        $baseUrl = $this->getEndpoint($companyId);
-        return str_replace('graphql', "api/2024-03-01/$merchantId/accounts/statements", $baseUrl);
-    }
-
-    /**
-     * @param string $companyId
-     * @param bool $encrypted
-     * @return array
-     * @throws InputException
-     */
-    private function getJwt(string $companyId, bool $encrypted = true): array
-    {
-        $value = $this->config->getValue(self::PAYMENT_RVVUP_AX_INTEGRATION . '/company_jwt_mapping');
-        $value = $this->serializer->unserialize($value);
-        foreach ($value as $entry) {
-            if ($entry['company'] === $companyId) {
-                if ($encrypted) {
-                    $jwt = $this->encryptor->decrypt($entry['api_key']);
-                    $parts = explode('.', $jwt);
-                    list($head, $body, $crypto) = $parts;
-                    return $this->serializer->unserialize(base64_decode($body));
-                } else {
-                    return ['jwt' => $this->encryptor->decrypt($entry['api_key'])];
-                }
-            }
-        }
-        throw new InputException(__('There is no saved company named ' . $companyId));
-    }
-
-    /**
-     * @param string $companyId
-     * @return string
-     * @throws InputException
-     */
-    private function getAuthToken(string $companyId): string
-    {
-        $jwt = $this->getJwt($companyId, false);
-        return $jwt['jwt'];
-    }
-
-    /**
-     * @param string $companyId
-     * @return string
-     * @throws InputException
-     */
-    private function getMerchantId(string $companyId): string
-    {
-        $jwt = $this->getJwt($companyId);
-        return (string) $jwt['merchantId'];
-    }
-
-    /**
-     * @param string $companyId
-     * @return string
-     */
-    private function getEndpoint(string $companyId): string
-    {
-        $jwt = $this->getJwt($companyId);
-        return (string) $jwt['aud'];
     }
 }
