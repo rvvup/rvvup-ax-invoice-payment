@@ -13,6 +13,7 @@ use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Psr\Log\LoggerInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Rvvup\AxInvoicePayment\Model\UserAgentBuilder;
 use Rvvup\AxInvoicePayment\Sdk\Curl;
 
 class Pay implements HttpPostActionInterface
@@ -42,6 +43,9 @@ class Pay implements HttpPostActionInterface
     /** @var Json */
     private $serializer;
 
+    /** @var UserAgentBuilder */
+    private $userAgentBuilder;
+
     /**
      * @param ScopeConfigInterface $config
      * @param LoggerInterface $logger
@@ -51,6 +55,7 @@ class Pay implements HttpPostActionInterface
      * @param ResultFactory $resultFactory
      * @param EncryptorInterface $encryptor
      * @param Json $serializer
+     * @param UserAgentBuilder $userAgentBuilder
      */
     public function __construct(
         ScopeConfigInterface $config,
@@ -60,7 +65,8 @@ class Pay implements HttpPostActionInterface
         RequestInterface     $request,
         ResultFactory        $resultFactory,
         EncryptorInterface   $encryptor,
-        Json                 $serializer
+        Json                 $serializer,
+        UserAgentBuilder     $userAgentBuilder
     ) {
         $this->logger = $logger;
         $this->config = $config;
@@ -70,6 +76,7 @@ class Pay implements HttpPostActionInterface
         $this->resultFactory = $resultFactory;
         $this->encryptor = $encryptor;
         $this->serializer = $serializer;
+        $this->userAgentBuilder = $userAgentBuilder;
     }
 
     /**
@@ -166,7 +173,8 @@ class Pay implements HttpPostActionInterface
             'Content-Type: application/json',
             'Accept: application/json',
             'Authorization: Bearer ' . $token,
-            'Idempotency-Key: ' . $accountId . $companyId
+            'Idempotency-Key: ' . $accountId . $companyId,
+            'User-Agent: ' . $this->userAgentBuilder->get()
         ];
     }
 
