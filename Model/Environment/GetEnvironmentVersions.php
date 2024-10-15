@@ -9,6 +9,7 @@ use InvalidArgumentException;
 use Magento\Framework\App\CacheInterface;
 use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\Composer\ComposerInformation;
+use Magento\Framework\Filesystem\Io\File;
 use Magento\Framework\Filesystem\Io\IoInterface;
 use Magento\Framework\Serialize\SerializerInterface;
 use Psr\Log\LoggerInterface;
@@ -16,36 +17,36 @@ use Psr\Log\LoggerInterface;
 class GetEnvironmentVersions implements GetEnvironmentVersionsInterface
 {
     /**
-     * @var \Magento\Framework\App\CacheInterface
+     * @var CacheInterface
      */
     private $cache;
 
     /**
-     * @var \Magento\Framework\App\ProductMetadataInterface
+     * @var ProductMetadataInterface
      */
     private $productMetadata;
 
     /**
-     * @var \Magento\Framework\Composer\ComposerInformation
+     * @var ComposerInformation
      */
     private $composerInformation;
 
     /**
      * Set via di.xml
      *
-     * @var \Magento\Framework\Filesystem\Io\IoInterface|\Magento\Framework\Filesystem\Io\File
+     * @var IoInterface|File
      */
     private $fileIo;
 
     /**
-     * @var \Magento\Framework\Serialize\SerializerInterface
+     * @var SerializerInterface
      */
     private $serializer;
 
     /**
      * Set via di.xml
      *
-     * @var \Psr\Log\LoggerInterface
+     * @var LoggerInterface
      */
     private $logger;
 
@@ -55,12 +56,12 @@ class GetEnvironmentVersions implements GetEnvironmentVersionsInterface
     private $cachedEnvironmentVersions;
 
     /**
-     * @param \Magento\Framework\App\CacheInterface $cache
-     * @param \Magento\Framework\App\ProductMetadataInterface $productMetadata
-     * @param \Magento\Framework\Composer\ComposerInformation $composerInformation
-     * @param \Magento\Framework\Filesystem\Io\IoInterface $fileIo
-     * @param \Magento\Framework\Serialize\SerializerInterface $serializer
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param CacheInterface $cache
+     * @param ProductMetadataInterface $productMetadata
+     * @param ComposerInformation $composerInformation
+     * @param IoInterface $fileIo
+     * @param SerializerInterface $serializer
+     * @param LoggerInterface $logger
      * @return void
      */
     public function __construct(
@@ -172,8 +173,7 @@ class GetEnvironmentVersions implements GetEnvironmentVersionsInterface
      */
     private function getAppCodeComposerJsonVersion(): ?string
     {
-        // We need to get 2 folders up to `app/code/Rvvup/AxInvoicePayment`,
-        // now we're in  `app/code/Rvvup/AxInvoicePayment/Model/Environment`
+        // We need to get 2 folders up to the root of the module to find the composer.json
         $fileName = __DIR__
             . DIRECTORY_SEPARATOR . '..'
             . DIRECTORY_SEPARATOR . '..'
@@ -187,7 +187,7 @@ class GetEnvironmentVersions implements GetEnvironmentVersionsInterface
             $composerFile = $this->fileIo->read($fileName);
 
             if (!is_string($composerFile)) {
-                $this->logger->debug('Failed to read composer file from `app/code` directory');
+                $this->logger->debug('Failed to read composer file');
 
                 return null;
             }
@@ -195,7 +195,7 @@ class GetEnvironmentVersions implements GetEnvironmentVersionsInterface
             try {
                 $composerData = $this->serializer->unserialize($composerFile);
             } catch (InvalidArgumentException $ex) {
-                $this->logger->debug('Failed to unserialize content of composer file from `app/code` directory');
+                $this->logger->debug('Failed to unserialize content of composer file');
 
                 return null;
             }

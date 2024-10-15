@@ -111,6 +111,7 @@ class Rvvalytix implements HttpPostActionInterface
      * @param string $accountId
      * @param string $invoiceId
      * @param string $type
+     * @param string $date
      * @throws InputException
      */
     private function sendEvent(
