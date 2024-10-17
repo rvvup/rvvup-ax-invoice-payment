@@ -6,7 +6,6 @@ namespace Rvvup\AxInvoicePayment\Controller\Index;
 
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Exception\NotFoundException;
 use Magento\Framework\View\Result\PageFactory;
 use Rvvup\AxInvoicePayment\Controller\Process\Pay;
 

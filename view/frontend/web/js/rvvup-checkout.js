@@ -40,6 +40,32 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
                     });
                 }
             })
+        },
+
+        landingPage: function(url, company_id, account_number, invoice_id) {
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    'company_id': company_id,
+                    'account_number': account_number,
+                    'invoice_id': invoice_id,
+                    'type': 'landing'
+                }
+            });
+        },
+
+        payClicked: function(url, company_id, account_number, invoice_id) {
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    'company_id': company_id,
+                    'account_number': account_number,
+                    'invoice_id': invoice_id,
+                    'type': 'pay_clicked'
+                }
+            });
         }
     };
 });

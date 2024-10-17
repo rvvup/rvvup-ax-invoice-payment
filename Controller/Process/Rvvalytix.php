@@ -3,18 +3,18 @@ declare(strict_types=1);
 
 namespace Rvvup\AxInvoicePayment\Controller\Process;
 
+use DateTime;
 use Laminas\Http\Request;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\InputException;
-use Magento\Framework\Serialize\SerializerInterface;
 use Psr\Log\LoggerInterface;
 use Rvvup\AxInvoicePayment\Model\Config\RvvupConfigProvider;
 use Rvvup\AxInvoicePayment\Model\UserAgentBuilder;
 use Rvvup\AxInvoicePayment\Sdk\Curl;
 
-class Pay implements HttpPostActionInterface
+class Rvvalytix implements HttpPostActionInterface
 {
     public const PAYMENT_RVVUP_AX_INTEGRATION = 'payment/rvvup_ax_integration';
     /** @var LoggerInterface */
@@ -22,9 +22,6 @@ class Pay implements HttpPostActionInterface
 
     /** @var Curl */
     private $curl;
-
-    /** @var SerializerInterface */
-    private $json;
 
     /** @var RequestInterface */
     private $request;
@@ -41,7 +38,6 @@ class Pay implements HttpPostActionInterface
     /**
      * @param LoggerInterface $logger
      * @param Curl $curl
-     * @param SerializerInterface $json
      * @param RequestInterface $request
      * @param ResultFactory $resultFactory
      * @param UserAgentBuilder $userAgentBuilder
@@ -50,7 +46,6 @@ class Pay implements HttpPostActionInterface
     public function __construct(
         LoggerInterface     $logger,
         Curl                $curl,
-        SerializerInterface $json,
         RequestInterface    $request,
         ResultFactory       $resultFactory,
         UserAgentBuilder    $userAgentBuilder,
@@ -59,7 +54,6 @@ class Pay implements HttpPostActionInterface
     {
         $this->logger = $logger;
         $this->curl = $curl;
-        $this->json = $json;
         $this->request = $request;
         $this->resultFactory = $resultFactory;
         $this->userAgentBuilder = $userAgentBuilder;
@@ -77,13 +71,18 @@ class Pay implements HttpPostActionInterface
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
         try {
-            $url = $this->createAccountStatement($companyId, $accountNumber, $invoiceId);
+            $type = $this->mapType($this->request->getParam('type'));
+            $this->sendEvent(
+                $companyId,
+                $accountNumber,
+                $invoiceId,
+                $type
+            );
             $result->setData([
-                'url' => $url,
                 'success' => true
             ]);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to create Rvvup checkout', [$e->getMessage()]);
+            $this->logger->error('Failed to send Rvvup event', [$e->getMessage()]);
             $result->setData([
                 'success' => false
             ]);
@@ -95,56 +94,62 @@ class Pay implements HttpPostActionInterface
      * @param string $companyId
      * @param string $accountId
      * @param string $invoiceId
-     * @return string
+     * @param string $type
      * @throws InputException
      */
-    private function createAccountStatement(
+    private function sendEvent(
         string $companyId,
         string $accountId,
-        string $invoiceId
-    ): string
+        string $invoiceId,
+        string $type
+    )
     {
         $rvvupConfig = $this->rvvupConfigProvider->getConfig($companyId);
+
         $merchantId = $rvvupConfig['merchant_id'];
         $baseUrl = $rvvupConfig['endpoint'];
 
-        $params = $this->buildRequestData($companyId, $accountId, $invoiceId, $rvvupConfig['auth_token']);
-        $request = $this->curl->request(
+        $params = $this->buildRequestData($merchantId, $companyId, $accountId, $invoiceId, $type, $rvvupConfig['auth_token']);
+        $this->curl->request(
             Request::METHOD_POST,
-            str_replace('graphql', "api/2024-03-01/$merchantId/accounts/statements", $baseUrl),
+            str_replace('graphql', "rvvalytix", $baseUrl),
             $params
         );
-        $body = $this->json->unserialize($request->body);
-        if (isset($body['url'])) {
-            return $body['url'];
-        };
-        throw new InputException(__('Missing returnUrl from Rvvup'));
     }
 
     /**
+     * @param string $merchantId
      * @param string $companyId
      * @param string $accountId
      * @param string $invoiceId
+     * @param string $type
      * @param string $authToken
      * @return array
      */
     private function buildRequestData(
+        string $merchantId,
         string $companyId,
         string $accountId,
         string $invoiceId,
+        string $type,
         string $authToken
     ): array
     {
         $postData = [
-            "connection" => [
-                "type" => "MAGENTO_PROXY",
-                "companyId" => $companyId,
-                "accountId" => $accountId,
-                "invoiceId" => $invoiceId
+            "events" => [
+                [
+                    "merchantId" => $merchantId,
+                    "name" => $type,
+                    "data" => [
+                        "companyId" => $companyId,
+                        "accountId" => $accountId,
+                        "invoiceId" => $invoiceId
+                    ],
+                    "originCreatedAt" => (new DateTime('now'))->format(DateTime::ATOM),
+                ]
             ],
-            'reference' => $accountId
         ];
-        $headers = $this->getHeaders($accountId, $companyId, $authToken);
+        $headers = $this->getHeaders($authToken);
 
         return [
             'headers' => $headers,
@@ -153,23 +158,32 @@ class Pay implements HttpPostActionInterface
     }
 
     /**
-     * @param string $accountId
-     * @param string $companyId
      * @param string $authToken
      * @return string[]
      */
-    private function getHeaders(
-        string $accountId,
-        string $companyId,
-        string $authToken
-    ): array
+    private function getHeaders(string $authToken): array
     {
         return [
             'Content-Type: application/json',
             'Accept: application/json',
+            'User-Agent: ' . $this->userAgentBuilder->get(),
             'Authorization: Bearer ' . $authToken,
-            'Idempotency-Key: ' . $accountId . $companyId,
-            'User-Agent: ' . $this->userAgentBuilder->get()
         ];
+    }
+
+    /**
+     * @param string $type
+     * @return string
+     * @throws InputException
+     */
+    private function mapType(string $type): string
+    {
+        switch ($type) {
+            case 'landing':
+                return "ACCOUNT_STATEMENT_PLUGIN_PAGE_RENDERED";
+            case 'pay_clicked':
+                return "ACCOUNT_STATEMENT_PLUGIN_PAGE_PAY_CLICKED";
+        }
+        throw new InputException(__('Invalid type ' . $type));
     }
 }
