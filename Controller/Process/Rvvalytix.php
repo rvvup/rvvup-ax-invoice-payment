@@ -182,7 +182,7 @@ class Rvvalytix implements HttpPostActionInterface
             case 'landing':
                 return "ACCOUNT_STATEMENT_PLUGIN_PAGE_RENDERED";
             case 'pay_clicked':
-                return "ACCOUNT_STATEMENT_PLUGIN_PAGE_PAY_CLICKED";
+                return "ACCOUNT_STATEMENT_PLUGIN_PAGE_PAY_SELECTED";
         }
         throw new InputException(__('Invalid type ' . $type));
     }
