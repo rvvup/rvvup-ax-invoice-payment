@@ -6,7 +6,7 @@ namespace Rvvup\AxInvoicePayment\Model\Environment;
 
 interface GetEnvironmentVersionsInterface
 {
-    public const RVVUP_ENVIRONMENT_VERSIONS = 'rvvup_environment_versions';
+    public const RVVUP_ENVIRONMENT_VERSIONS_AX = 'rvvup_environment_versions_ax';
     public const UNKNOWN_VERSION = 'unknown';
 
     /**

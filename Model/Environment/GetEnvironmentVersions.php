@@ -110,7 +110,7 @@ class GetEnvironmentVersions implements GetEnvironmentVersionsInterface
         ];
 
         try {
-            $this->cache->save($this->serializer->serialize($environmentVersions), self::RVVUP_ENVIRONMENT_VERSIONS);
+            $this->cache->save($this->serializer->serialize($environmentVersions), self::RVVUP_ENVIRONMENT_VERSIONS_AX);
         } catch (InvalidArgumentException $ex) {
             $this->logger->error(
                 'Failed to serialize & save environment version data to cache with message: ' . $ex->getMessage(),
@@ -130,7 +130,7 @@ class GetEnvironmentVersions implements GetEnvironmentVersionsInterface
     private function getCachedEnvironmentVersions(): ?string
     {
         if ($this->cachedEnvironmentVersions === null) {
-            $this->cachedEnvironmentVersions = $this->cache->load(self::RVVUP_ENVIRONMENT_VERSIONS);
+            $this->cachedEnvironmentVersions = $this->cache->load(self::RVVUP_ENVIRONMENT_VERSIONS_AX);
         }
 
         if (!is_string($this->cachedEnvironmentVersions) || empty($this->cachedEnvironmentVersions)) {
