@@ -95,7 +95,7 @@ class GetEnvironmentVersionsTest extends TestCase
     public function testInstalledViaComposer(): void
     {
         $this->composerInformation->expects($this->once())->method('getInstalledMagentoPackages')->willReturn([
-            'rvvup/module-magento-payments' => [
+            'rvvup/module-ax-invoice-payment' => [
                 'version' => '0.1.0'
             ],
         ]);
@@ -194,7 +194,7 @@ class GetEnvironmentVersionsTest extends TestCase
             ->expects($this->once())
             ->method('getInstalledMagentoPackages')
             ->willReturn([
-                'rvvup/module-magento-payments' => [
+                'rvvup/module-ax-invoice-payment' => [
                     'version' => '0.1.0'
                 ]
             ]);
