@@ -184,7 +184,7 @@ class GetEnvironmentVersionsTest extends TestCase
         $this->cache
             ->expects($this->exactly(2))
             ->method('load')
-            ->with(GetEnvironmentVersionsInterface::RVVUP_ENVIRONMENT_VERSIONS)
+            ->with(GetEnvironmentVersionsInterface::RVVUP_ENVIRONMENT_VERSIONS_AX)
             ->willReturnOnConsecutiveCalls(
                 false,
                 $encodedEnvironmentVersions
