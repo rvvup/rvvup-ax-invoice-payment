@@ -27,7 +27,7 @@ class Curl
             CURLOPT_URL => $uri,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_TIMEOUT => $options["timeout"] ?? 20,
+            CURLOPT_TIMEOUT => $options["timeout"] ?? 60,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_POSTFIELDS => $options["json"] ? json_encode($options["json"]) : null,
