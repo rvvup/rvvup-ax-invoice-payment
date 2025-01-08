@@ -50,7 +50,7 @@ $loadingBarText = $escaper->escapeHtml($block->getLoadingBarText());
             <div class="rvvup_loading_bar"></div>
         </div>
     </div>
-    <button id="rvvup-payment" disabled>
+    <button id="rvvup-payment">
         <?= $payButtonText ?>
     </button>
 </div>
@@ -69,6 +69,9 @@ $loadingBarText = $escaper->escapeHtml($block->getLoadingBarText());
         let loadingBar = document.getElementsByClassName('rvvup_loading_bar')[0];
         let button = document.getElementById('rvvup-payment');
 
+        let statementUrl = null;
+        let statementCreateInProgress = false;
+        let buttonClicked = false;
         let progressInterval;
 
         function showLoadingContainer() {
@@ -107,48 +110,49 @@ $loadingBarText = $escaper->escapeHtml($block->getLoadingBarText());
         }
 
         function createStatement() {
-            showLoadingContainer();
-            return rvvupCheckout.createAccountStatement(paymentUrl, companyId, accountNumber, invoiceId);
+            statementCreateInProgress = true;
+            return rvvupCheckout.createAccountStatement(paymentUrl, companyId, accountNumber, invoiceId)
+                .then(function (data) {
+                    completeLoadingBar();
+                    if (data['success'] && data['url']) {
+                        if (buttonClicked) {
+                            window.location.href = data['url'];
+                        } else {
+                            statementUrl = data['url'];
+                        }
+                    } else {
+                        // error handling
+                        if (buttonClicked) {
+                            hideLoadingContainer();
+                            button.disabled = false;
+                            buttonClicked = false;
+                            showErrorAlert();
+                        }
+                    }
+                }).finally(function () {
+                    statementCreateInProgress = false;
+                });
         }
 
         function onPageLoad() {
             rvvupCheckout.landingPage(rvvalytixUrl, companyId, accountNumber, invoiceId);
-            createStatement()
-                .then(function (data) {
-                    completeLoadingBar();
-                    if (data['success'] && data['url']) {
-                        button.disabled = false;
-                        button.addEventListener('click', function () {
-                            rvvupCheckout.payClicked(rvvalytixUrl, companyId, accountNumber, invoiceId);
-                            window.location.href = data['url'];
-                        });
-                    } else {
-                        hideLoadingContainer();
-                        enableButtonRetryMode();
-                        showErrorAlert();
-                    }
-                });
-        }
-
-        function enableButtonRetryMode() {
-            button.disabled = false;
-            button.addEventListener('click', function retryAction() {
-                button.disabled = true;
+            createStatement();
+            button.addEventListener('click', function () {
                 rvvupCheckout.payClicked(rvvalytixUrl, companyId, accountNumber, invoiceId);
-                createStatement()
-                    .then(function (data) {
-                        completeLoadingBar();
-                        if (data['success'] && data['url']) {
-                            window.location.href = data['url'];
-                        } else {
-                            hideLoadingContainer();
-                            enableButtonRetryMode();
-                            showErrorAlert();
-                        }
-                    });
-            }, {once: true});
+                button.disabled = true;
+                buttonClicked = true;
+                if (statementUrl) {
+                    window.location.href = statementUrl;
+                } else {
+                    showLoadingContainer();
+                    if (!statementCreateInProgress) {
+                        createStatement()
+                    }
+                }
+            });
         }
 
         onPageLoad();
+
     });
 </script>
