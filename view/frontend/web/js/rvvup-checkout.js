@@ -5,41 +5,43 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
             url,
             company_id,
             account_number,
-            invoice_id
+            invoice_id,
+            retryCount = 2
         ) {
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: {
-                    'company_id' : company_id,
-                    'account_number' : account_number,
-                    'invoice_id' : invoice_id
-                },
-                success: function (data) {
-                    if (data.success !== true) {
-                        document.getElementById('rvvup-payment').disabled = false;
-                        alert({
-                            content: 'We are unable to get this statement at the moment, please try again later'
-                        });
-                        return;
-                    }
-
-                    if (data['url']) {
-                        window.location.href = data['url'];
-                    } else {
-                        document.getElementById('rvvup-payment').disabled = false;
-                        alert({
-                            content: 'We are unable to get this statement at the moment, please try again later'
-                        });
-                    }
-                },
-                error: function () {
-                    document.getElementById('rvvup-payment').disabled = false;
-                    alert({
-                        content: 'We are unable to get this statement at the moment, please try again later'
+            return new Promise(function (resolve, reject) {
+                function createStatement() {
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        data: {
+                            'company_id': company_id,
+                            'account_number': account_number,
+                            'invoice_id': invoice_id
+                        },
+                        success: function (data) {
+                            if (data.success) {
+                                resolve(data);
+                            } else {
+                                if (retryCount > 0) {
+                                    retryCount--;
+                                    createStatement();
+                                } else {
+                                    resolve({ success: false });
+                                }
+                            }
+                        },
+                        error: function () {
+                            if (retryCount > 0) {
+                                retryCount--;
+                                createStatement();
+                            } else {
+                                resolve({ success: false });
+                            }
+                        }
                     });
                 }
-            })
+                createStatement();
+            });
         },
 
         landingPage: function(url, company_id, account_number, invoice_id) {

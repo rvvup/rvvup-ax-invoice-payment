@@ -5,35 +5,150 @@ if (!$escaper) {
 }
 $paymentUrl = $block->getUrl('statements/process/pay');
 $rvvalytixUrl = $block->getUrl('statements/process/rvvalytix');
+
+$payButtonText = $escaper->escapeHtml($block->getPayButtonText());
+$loadingBarText = $escaper->escapeHtml($block->getLoadingBarText());
 ?>
-<button id="rvvup-payment"><?= __('Pay Now') ?></button>
+
+<style>
+    .rvvup_loading_container {
+        width: 100%;
+        margin-bottom: 10px;
+        display: none;
+    }
+
+    .rvvup_loading_container.show {
+        display: block;
+    }
+
+    .rvvup_loading_text {
+        width: 100%;
+        margin-bottom: 5px;
+        font-size: 14px;
+        color: #555;
+    }
+
+    .rvvup_loading_bar_container {
+        width: 100%;
+        background-color: #e0e0e0;
+        height: 20px;
+    }
+
+    .rvvup_loading_bar {
+        width: 0%;
+        background-color: #046a38;
+        height: 100%;
+    }
+</style>
+
+<div class="rvvup_container">
+    <div class="rvvup_loading_container">
+        <div class="rvvup_loading_text">
+            <?= $loadingBarText ?>
+        </div>
+        <div class="rvvup_loading_bar_container">
+            <div class="rvvup_loading_bar"></div>
+        </div>
+    </div>
+    <button id="rvvup-payment" disabled>
+        <?= $payButtonText ?>
+    </button>
+</div>
+
 <script type="text/javascript">
     require([
         'Rvvup_AxInvoicePayment/js/rvvup-checkout'
     ], function (rvvupCheckout) {
-        var button = document.getElementById('rvvup-payment');
-        button.addEventListener('click', function () {
-            var companyId = '<?= $block->getParam('company_id') ?>';
-            var accountNumber = '<?= $block->getParam('account_number') ?>';
-            var invoiceId = '<?= $block->getParam('invoice_id') ?>';
-            var paymentUrl = '<?= $paymentUrl ?>';
-            var rvvalytixUrl = '<?= $rvvalytixUrl ?>';
-            button.disabled = true;
+        let companyId = '<?= $block->getParam('company_id') ?>';
+        let accountNumber = '<?= $block->getParam('account_number') ?>';
+        let invoiceId = '<?= $block->getParam('invoice_id') ?>';
+        let paymentUrl = '<?= $paymentUrl ?>';
+        let rvvalytixUrl = '<?= $rvvalytixUrl ?>';
 
-            rvvupCheckout.payClicked(rvvalytixUrl, companyId, accountNumber, invoiceId);
-            rvvupCheckout.createAccountStatement(paymentUrl, companyId, accountNumber, invoiceId);
-        }, false);
-    });
-</script>
-<script type="text/javascript">
-    require([
-        'Rvvup_AxInvoicePayment/js/rvvup-checkout'
-    ], function (rvvupCheckout) {
-        var companyId = '<?= $block->getParam('company_id') ?>';
-        var accountNumber = '<?= $block->getParam('account_number') ?>';
-        var invoiceId = '<?= $block->getParam('invoice_id') ?>';
-        var url = '<?= $rvvalytixUrl ?>';
+        let loadingContainer = document.getElementsByClassName('rvvup_loading_container')[0];
+        let loadingBar = document.getElementsByClassName('rvvup_loading_bar')[0];
+        let button = document.getElementById('rvvup-payment');
 
-        rvvupCheckout.landingPage(url, companyId, accountNumber, invoiceId);
+        let progressInterval;
+
+        function showLoadingContainer() {
+            loadingContainer.classList.add('show');
+            loadingBar.style.width = '0%';
+            startProgressBar();
+        }
+
+        function startProgressBar() {
+            let progress = 0;
+            progressInterval = setInterval(function () {
+                if (progress < 90) {
+                    progress += 1;
+                    loadingBar.style.width = progress + '%';
+                }
+            }, 1000);
+        }
+
+        function pauseProgressBar() {
+            clearInterval(progressInterval);
+        }
+
+        function completeLoadingBar() {
+            pauseProgressBar();
+            loadingBar.style.width = '100%';
+            setTimeout(hideLoadingContainer, 500);
+        }
+
+        function hideLoadingContainer() {
+            loadingContainer.classList.remove('show');
+        }
+
+        function showErrorAlert() {
+            // setTimeout to force the alert to show in the next tick, allowing the loading bar to hide first.
+            setTimeout(() => alert('We are unable to load the statement details, please try again in a few minutes'), 0)
+        }
+
+        function createStatement() {
+            showLoadingContainer();
+            return rvvupCheckout.createAccountStatement(paymentUrl, companyId, accountNumber, invoiceId);
+        }
+
+        function onPageLoad() {
+            rvvupCheckout.landingPage(rvvalytixUrl, companyId, accountNumber, invoiceId);
+            createStatement()
+                .then(function (data) {
+                    completeLoadingBar();
+                    if (data['success'] && data['url']) {
+                        button.disabled = false;
+                        button.addEventListener('click', function () {
+                            rvvupCheckout.payClicked(rvvalytixUrl, companyId, accountNumber, invoiceId);
+                            window.location.href = data['url'];
+                        });
+                    } else {
+                        hideLoadingContainer();
+                        enableButtonRetryMode();
+                        showErrorAlert();
+                    }
+                });
+        }
+
+        function enableButtonRetryMode() {
+            button.disabled = false;
+            button.addEventListener('click', function retryAction() {
+                button.disabled = true;
+                rvvupCheckout.payClicked(rvvalytixUrl, companyId, accountNumber, invoiceId);
+                createStatement()
+                    .then(function (data) {
+                        completeLoadingBar();
+                        if (data['success'] && data['url']) {
+                            window.location.href = data['url'];
+                        } else {
+                            hideLoadingContainer();
+                            enableButtonRetryMode();
+                            showErrorAlert();
+                        }
+                    });
+            }, {once: true});
+        }
+
+        onPageLoad();
     });
 </script>

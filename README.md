@@ -9,7 +9,7 @@ these steps:
 - Run the following command to start the docker containers:
 
 ```
-docker-compose up -d --build
+./scripts/local-run.sh rebuild
 ```
 
 - The magento store, once it has completed start up, will be available at https://local.dev.rvvuptech.com/
