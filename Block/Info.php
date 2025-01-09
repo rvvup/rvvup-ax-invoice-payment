@@ -14,7 +14,7 @@ class Info extends Template
      *
      * @return string
      */
-    public function getPayButtonText(): string
+    public function getButtonText(): string
     {
         return $this->_scopeConfig->getValue(
             'payment/rvvup_ax_integration/button_text',

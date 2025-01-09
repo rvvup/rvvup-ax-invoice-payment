@@ -6,7 +6,7 @@ if (!$escaper) {
 $paymentUrl = $block->getUrl('statements/process/pay');
 $rvvalytixUrl = $block->getUrl('statements/process/rvvalytix');
 
-$buttonText = $escaper->escapeHtml($block->getPayButtonText());
+$buttonText = $escaper->escapeHtml($block->getButtonText());
 $buttonLoadingText = $escaper->escapeHtml($block->getButtonLoadingText());
 ?>
 
