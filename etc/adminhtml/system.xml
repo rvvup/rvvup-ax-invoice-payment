@@ -14,11 +14,11 @@
                     <frontend_model>Rvvup\AxInvoicePayment\Block\Adminhtml\Field\DynamicRows</frontend_model>
                     <backend_model>Rvvup\AxInvoicePayment\Model\Config\Jwt\Validator</backend_model>
                 </field>
-                <field id="pay_button_text" type="text" sortOrder="15" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
-                    <label>Pay Button Text</label>
+                <field id="button_text" type="text" sortOrder="15" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+                    <label>Button Text</label>
                 </field>
-                <field id="loading_bar_text" type="text" sortOrder="20" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
-                    <label>Loading Bar Text</label>
+                <field id="button_loading_text" type="text" sortOrder="20" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+                    <label>Button Loading Text</label>
                 </field>
             </group>
         </section>

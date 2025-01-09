@@ -4,8 +4,8 @@
     <default>
         <payment>
             <rvvup_ax_integration>
-                <pay_button_text>Review Statement</pay_button_text>
-                <loading_bar_text>Loading statement details, please wait...</loading_bar_text>
+                <button_text>Review Statement</button_text>
+                <button_loading_text>Loading Statement...</button_loading_text>
             </rvvup_ax_integration>
         </payment>
     </default>

@@ -6,54 +6,13 @@ if (!$escaper) {
 $paymentUrl = $block->getUrl('statements/process/pay');
 $rvvalytixUrl = $block->getUrl('statements/process/rvvalytix');
 
-$payButtonText = $escaper->escapeHtml($block->getPayButtonText());
-$loadingBarText = $escaper->escapeHtml($block->getLoadingBarText());
+$buttonText = $escaper->escapeHtml($block->getPayButtonText());
+$buttonLoadingText = $escaper->escapeHtml($block->getButtonLoadingText());
 ?>
 
-<style>
-    .rvvup_loading_container {
-        width: 100%;
-        margin-bottom: 10px;
-        display: none;
-    }
-
-    .rvvup_loading_container.show {
-        display: block;
-    }
-
-    .rvvup_loading_text {
-        width: 100%;
-        margin-bottom: 5px;
-        font-size: 14px;
-        color: #555;
-    }
-
-    .rvvup_loading_bar_container {
-        width: 100%;
-        background-color: #e0e0e0;
-        height: 20px;
-    }
-
-    .rvvup_loading_bar {
-        width: 0%;
-        background-color: #046a38;
-        height: 100%;
-    }
-</style>
-
-<div class="rvvup_container">
-    <div class="rvvup_loading_container">
-        <div class="rvvup_loading_text">
-            <?= $loadingBarText ?>
-        </div>
-        <div class="rvvup_loading_bar_container">
-            <div class="rvvup_loading_bar"></div>
-        </div>
-    </div>
-    <button id="rvvup-payment">
-        <?= $payButtonText ?>
-    </button>
-</div>
+<button id="rvvup-payment" class="action primary">
+    <?= $buttonText ?>
+</button>
 
 <script type="text/javascript">
     require([
@@ -65,43 +24,44 @@ $loadingBarText = $escaper->escapeHtml($block->getLoadingBarText());
         let paymentUrl = '<?= $paymentUrl ?>';
         let rvvalytixUrl = '<?= $rvvalytixUrl ?>';
 
-        let loadingContainer = document.getElementsByClassName('rvvup_loading_container')[0];
-        let loadingBar = document.getElementsByClassName('rvvup_loading_bar')[0];
         let button = document.getElementById('rvvup-payment');
+        let buttonColor = getButtonColor(button);
+
+        function getButtonColor(button) {
+            let buttonStyle = window.getComputedStyle(button);
+            return buttonStyle.backgroundColor || backgroundIfColor(buttonStyle) || '#046a38';
+        }
+
+        function backgroundIfColor(buttonStyle) {
+            return buttonStyle.background.match(/^#[0-9a-fA-F]{3,4}$|^#[0-9a-fA-F]{6,8}$/i) ? buttonStyle.background : null;
+        }
 
         let statementUrl = null;
         let statementCreateInProgress = false;
         let buttonClicked = false;
         let progressInterval;
 
-        function showLoadingContainer() {
-            loadingContainer.classList.add('show');
-            loadingBar.style.width = '0%';
-            startProgressBar();
-        }
-
-        function startProgressBar() {
-            let progress = 0;
+        function startButtonProgressBar() {
+            let progress = 3;
+            button.textContent = '<?= $buttonLoadingText ?>';
+            button.style.opacity = '1';
+            button.style.background = `linear-gradient(90deg, ${buttonColor} 0%, #616664 0%)`;
             progressInterval = setInterval(function () {
                 if (progress < 90) {
                     progress += 1;
-                    loadingBar.style.width = progress + '%';
+                    button.style.background = `linear-gradient(90deg, ${buttonColor} ${progress}%, #616664 0%)`;
                 }
             }, 1000);
         }
 
-        function pauseProgressBar() {
+        function completeButton() {
+            pauseButtonProgress();
+            button.style.background = null;
+            button.style.backgroundColor = buttonColor;
+        }
+
+        function pauseButtonProgress() {
             clearInterval(progressInterval);
-        }
-
-        function completeLoadingBar() {
-            pauseProgressBar();
-            loadingBar.style.width = '100%';
-            setTimeout(hideLoadingContainer, 500);
-        }
-
-        function hideLoadingContainer() {
-            loadingContainer.classList.remove('show');
         }
 
         function showErrorAlert() {
@@ -113,7 +73,7 @@ $loadingBarText = $escaper->escapeHtml($block->getLoadingBarText());
             statementCreateInProgress = true;
             return rvvupCheckout.createAccountStatement(paymentUrl, companyId, accountNumber, invoiceId)
                 .then(function (data) {
-                    completeLoadingBar();
+                    completeButton();
                     if (data['success'] && data['url']) {
                         if (buttonClicked) {
                             window.location.href = data['url'];
@@ -121,8 +81,8 @@ $loadingBarText = $escaper->escapeHtml($block->getLoadingBarText());
                             statementUrl = data['url'];
                         }
                     } else {
+                        button.textContent = '<?= $buttonText ?>';
                         if (buttonClicked) {
-                            hideLoadingContainer();
                             button.disabled = false;
                             buttonClicked = false;
                             showErrorAlert();
@@ -143,7 +103,7 @@ $loadingBarText = $escaper->escapeHtml($block->getLoadingBarText());
                 if (statementUrl) {
                     window.location.href = statementUrl;
                 } else {
-                    showLoadingContainer();
+                    startButtonProgressBar();
                     if (!statementCreateInProgress) {
                         createStatement()
                     }

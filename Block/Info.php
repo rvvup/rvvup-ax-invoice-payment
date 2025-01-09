@@ -17,21 +17,21 @@ class Info extends Template
     public function getPayButtonText(): string
     {
         return $this->_scopeConfig->getValue(
-            'payment/rvvup_ax_integration/pay_button_text',
+            'payment/rvvup_ax_integration/button_text',
             ScopeInterface::SCOPE_STORE
         ) ?: 'Review Statement';
     }
 
 
     /**
-     * Get admin config value for Loading Bar Text
+     * Get admin config value for Loading Text
      *
      * @return string
      */
-    public function getLoadingBarText(): string
+    public function getButtonLoadingText(): string
     {
         return $this->_scopeConfig->getValue(
-            'payment/rvvup_ax_integration/loading_bar_text',
+            'payment/rvvup_ax_integration/button_loading_text',
             ScopeInterface::SCOPE_STORE
         ) ?: 'Loading statement details, please wait...';
     }
