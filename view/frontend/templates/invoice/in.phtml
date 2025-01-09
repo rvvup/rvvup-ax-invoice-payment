@@ -26,6 +26,10 @@ $buttonLoadingText = $escaper->escapeHtml($block->getButtonLoadingText());
 
         let button = document.getElementById('rvvup-payment');
         let buttonColor = getButtonColor(button);
+        let statementUrl = null;
+        let statementCreateInProgress = false;
+        let buttonClicked = false;
+        let progressInterval;
 
         function getButtonColor(button) {
             let buttonStyle = window.getComputedStyle(button);
@@ -35,11 +39,6 @@ $buttonLoadingText = $escaper->escapeHtml($block->getButtonLoadingText());
         function backgroundIfColor(buttonStyle) {
             return buttonStyle.background.match(/^#[0-9a-fA-F]{3,4}$|^#[0-9a-fA-F]{6,8}$/i) ? buttonStyle.background : null;
         }
-
-        let statementUrl = null;
-        let statementCreateInProgress = false;
-        let buttonClicked = false;
-        let progressInterval;
 
         function startButtonProgressBar() {
             let progress = 3;
