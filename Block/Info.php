@@ -33,7 +33,7 @@ class Info extends Template
         return $this->_scopeConfig->getValue(
             'payment/rvvup_ax_integration/button_loading_text',
             ScopeInterface::SCOPE_STORE
-        ) ?: 'Loading statement details, please wait...';
+        ) ?: 'Loading Statement...';
     }
 
     /**
