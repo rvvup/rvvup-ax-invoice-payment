@@ -5,35 +5,114 @@ if (!$escaper) {
 }
 $paymentUrl = $block->getUrl('statements/process/pay');
 $rvvalytixUrl = $block->getUrl('statements/process/rvvalytix');
+
+$buttonText = $escaper->escapeHtml($block->getButtonText());
+$buttonLoadingText = $escaper->escapeHtml($block->getButtonLoadingText());
 ?>
-<button id="rvvup-payment"><?= __('Pay Now') ?></button>
+
+<button id="rvvup-payment" class="action primary">
+    <?= $buttonText ?>
+</button>
+
 <script type="text/javascript">
     require([
         'Rvvup_AxInvoicePayment/js/rvvup-checkout'
     ], function (rvvupCheckout) {
-        var button = document.getElementById('rvvup-payment');
-        button.addEventListener('click', function () {
-            var companyId = '<?= $block->getParam('company_id') ?>';
-            var accountNumber = '<?= $block->getParam('account_number') ?>';
-            var invoiceId = '<?= $block->getParam('invoice_id') ?>';
-            var paymentUrl = '<?= $paymentUrl ?>';
-            var rvvalytixUrl = '<?= $rvvalytixUrl ?>';
-            button.disabled = true;
+        let companyId = '<?= $block->getParam('company_id') ?>';
+        let accountNumber = '<?= $block->getParam('account_number') ?>';
+        let invoiceId = '<?= $block->getParam('invoice_id') ?>';
+        let paymentUrl = '<?= $paymentUrl ?>';
+        let rvvalytixUrl = '<?= $rvvalytixUrl ?>';
 
-            rvvupCheckout.payClicked(rvvalytixUrl, companyId, accountNumber, invoiceId);
-            rvvupCheckout.createAccountStatement(paymentUrl, companyId, accountNumber, invoiceId);
-        }, false);
-    });
-</script>
-<script type="text/javascript">
-    require([
-        'Rvvup_AxInvoicePayment/js/rvvup-checkout'
-    ], function (rvvupCheckout) {
-        var companyId = '<?= $block->getParam('company_id') ?>';
-        var accountNumber = '<?= $block->getParam('account_number') ?>';
-        var invoiceId = '<?= $block->getParam('invoice_id') ?>';
-        var url = '<?= $rvvalytixUrl ?>';
+        let button = document.getElementById('rvvup-payment');
+        let buttonColor = getButtonColor(button);
+        let statementUrl = null;
+        let statementCreateInProgress = false;
+        let buttonClicked = false;
+        let progressInterval;
 
-        rvvupCheckout.landingPage(url, companyId, accountNumber, invoiceId);
+        function getButtonColor(button) {
+            let buttonStyle = window.getComputedStyle(button);
+            return buttonStyle.backgroundColor || backgroundIfColor(buttonStyle) || '#046a38';
+        }
+
+        function backgroundIfColor(buttonStyle) {
+            return buttonStyle.background.match(/^#[0-9a-fA-F]{3,4}$|^#[0-9a-fA-F]{6,8}$/i) ? buttonStyle.background : null;
+        }
+
+        function startButtonProgressBar() {
+            let progress = 3;
+            button.textContent = '<?= $buttonLoadingText ?>';
+            button.style.opacity = '1';
+            button.style.background = `linear-gradient(90deg, ${buttonColor} 0%, #616664 0%)`;
+            progressInterval = setInterval(function () {
+                if (progress < 90) {
+                    progress += 1;
+                    button.style.background = `linear-gradient(90deg, ${buttonColor} ${progress}%, #616664 0%)`;
+                }
+            }, 1000);
+        }
+
+        function completeButton() {
+            pauseButtonProgress();
+            button.style.background = null;
+            button.style.backgroundColor = buttonColor;
+        }
+
+        function pauseButtonProgress() {
+            clearInterval(progressInterval);
+        }
+
+        function showErrorAlert() {
+            // setTimeout to force the alert to show in the next tick, allowing the loading bar to hide first.
+            setTimeout(() => alert('We are unable to load the statement details, please try again in a few minutes'), 0)
+        }
+
+        function createStatement() {
+            statementCreateInProgress = true;
+            return rvvupCheckout.createAccountStatement(paymentUrl, companyId, accountNumber, invoiceId)
+                .then(function (data) {
+                    if (data['url']) {
+                        if (buttonClicked) {
+                            window.location.href = data['url'];
+                        } else {
+                            statementUrl = data['url'];
+                        }
+                    } else {
+                        throw new Error('Statement creation failed');
+                    }
+                }).catch(function () {
+                    button.textContent = '<?= $buttonText ?>';
+                    if (buttonClicked) {
+                        button.disabled = false;
+                        buttonClicked = false;
+                        showErrorAlert();
+                    }
+                }).finally(function () {
+                    completeButton();
+                    statementCreateInProgress = false;
+                });
+        }
+
+        function onPageLoad() {
+            rvvupCheckout.landingPage(rvvalytixUrl, companyId, accountNumber, invoiceId);
+            createStatement();
+            button.addEventListener('click', function () {
+                rvvupCheckout.payClicked(rvvalytixUrl, companyId, accountNumber, invoiceId);
+                button.disabled = true;
+                buttonClicked = true;
+                if (statementUrl) {
+                    window.location.href = statementUrl;
+                } else {
+                    startButtonProgressBar();
+                    if (!statementCreateInProgress) {
+                        createStatement()
+                    }
+                }
+            });
+        }
+
+        onPageLoad();
+
     });
 </script>

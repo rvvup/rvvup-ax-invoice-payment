@@ -2,8 +2,7 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
         <section id="payment" sortOrder="1000" translate="label">
-            <group id="rvvup_ax_integration" sortOrder="10" showInStore="1"
-                   showInDefault="1" translate="label">
+            <group id="rvvup_ax_integration" sortOrder="10" showInStore="1" showInDefault="1" translate="label">
                 <label>Rvvup ERP Proxy</label>
                 <field id="active" type="select" sortOrder="5" showInDefault="1" translate="label">
                     <label>Enabled</label>
@@ -14,6 +13,12 @@
                     <label>Company | JWT mappings</label>
                     <frontend_model>Rvvup\AxInvoicePayment\Block\Adminhtml\Field\DynamicRows</frontend_model>
                     <backend_model>Rvvup\AxInvoicePayment\Model\Config\Jwt\Validator</backend_model>
+                </field>
+                <field id="button_text" type="text" sortOrder="15" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+                    <label>Button Text</label>
+                </field>
+                <field id="button_loading_text" type="text" sortOrder="20" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+                    <label>Button Loading Text</label>
                 </field>
             </group>
         </section>
