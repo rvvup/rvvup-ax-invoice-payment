@@ -1,4 +1,4 @@
-define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
+define(['jquery', 'Magento_Ui/js/modal/alert'], function ($, alert) {
     'use strict';
     return {
         createAccountStatement: function (
@@ -26,7 +26,7 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
                                     retryCount--;
                                     createStatement();
                                 } else {
-                                    resolve({ success: false });
+                                    reject();
                                 }
                             }
                         },
@@ -35,16 +35,17 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
                                 retryCount--;
                                 createStatement();
                             } else {
-                                resolve({ success: false });
+                                reject();
                             }
                         }
                     });
                 }
+
                 createStatement();
             });
         },
 
-        landingPage: function(url, company_id, account_number, invoice_id) {
+        landingPage: function (url, company_id, account_number, invoice_id) {
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -57,7 +58,7 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
             });
         },
 
-        payClicked: function(url, company_id, account_number, invoice_id) {
+        payClicked: function (url, company_id, account_number, invoice_id) {
             $.ajax({
                 url: url,
                 type: 'POST',

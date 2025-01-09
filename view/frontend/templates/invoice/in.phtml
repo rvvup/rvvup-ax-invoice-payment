@@ -72,22 +72,24 @@ $buttonLoadingText = $escaper->escapeHtml($block->getButtonLoadingText());
             statementCreateInProgress = true;
             return rvvupCheckout.createAccountStatement(paymentUrl, companyId, accountNumber, invoiceId)
                 .then(function (data) {
-                    completeButton();
-                    if (data['success'] && data['url']) {
+                    if (data['url']) {
                         if (buttonClicked) {
                             window.location.href = data['url'];
                         } else {
                             statementUrl = data['url'];
                         }
                     } else {
-                        button.textContent = '<?= $buttonText ?>';
-                        if (buttonClicked) {
-                            button.disabled = false;
-                            buttonClicked = false;
-                            showErrorAlert();
-                        }
+                        throw new Error('Statement creation failed');
+                    }
+                }).catch(function () {
+                    button.textContent = '<?= $buttonText ?>';
+                    if (buttonClicked) {
+                        button.disabled = false;
+                        buttonClicked = false;
+                        showErrorAlert();
                     }
                 }).finally(function () {
+                    completeButton();
                     statementCreateInProgress = false;
                 });
         }
