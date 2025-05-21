@@ -96,7 +96,6 @@ $buttonLoadingText = $escaper->escapeHtml($block->getButtonLoadingText());
 
         function onPageLoad() {
             rvvupCheckout.landingPage(rvvalytixUrl, companyId, accountNumber, invoiceId);
-            // createStatement();
             button.addEventListener('click', function () {
                 rvvupCheckout.payClicked(rvvalytixUrl, companyId, accountNumber, invoiceId);
                 button.disabled = true;
