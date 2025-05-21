@@ -55,8 +55,8 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function ($, alert) {
                     'account_number': account_number,
                     'invoice_id': invoice_id,
                     'type': 'landing',
-                    'user_agent': user_agent,
                     source: qs.get('source'),
+                    'user_agent': user_agent,
                 }
             });
         },
