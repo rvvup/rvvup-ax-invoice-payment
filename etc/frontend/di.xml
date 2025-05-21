@@ -10,6 +10,7 @@
     <type name="Rvvup\AxInvoicePayment\Controller\Process\Rvvalytix">
         <arguments>
             <argument name="logger" xsi:type="object">Rvvup\AxInvoicePayment\Logger\Statement</argument>
+            <argument name="remoteAddress" xsi:type="object">Magento\Framework\HTTP\PhpEnvironment\RemoteAddress</argument>
         </arguments>
     </type>
 

@@ -9,6 +9,7 @@ use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\InputException;
+use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
 use Psr\Log\LoggerInterface;
 use Rvvup\AxInvoicePayment\Model\Config\RvvupConfigProvider;
 use Rvvup\AxInvoicePayment\Model\UserAgentBuilder;
@@ -16,7 +17,6 @@ use Rvvup\AxInvoicePayment\Sdk\Curl;
 
 class Rvvalytix implements HttpPostActionInterface
 {
-    public const PAYMENT_RVVUP_AX_INTEGRATION = 'payment/rvvup_ax_integration';
     /** @var LoggerInterface */
     private $logger;
 
@@ -35,6 +35,9 @@ class Rvvalytix implements HttpPostActionInterface
     /** @var RvvupConfigProvider */
     private $rvvupConfigProvider;
 
+    /** @var RemoteAddress */
+    private $remoteAddress;
+
     /**
      * @param LoggerInterface $logger
      * @param Curl $curl
@@ -42,6 +45,7 @@ class Rvvalytix implements HttpPostActionInterface
      * @param ResultFactory $resultFactory
      * @param UserAgentBuilder $userAgentBuilder
      * @param RvvupConfigProvider $rvvupConfigProvider
+     * @param RemoteAddress $remoteAddress
      */
     public function __construct(
         LoggerInterface     $logger,
@@ -49,7 +53,8 @@ class Rvvalytix implements HttpPostActionInterface
         RequestInterface    $request,
         ResultFactory       $resultFactory,
         UserAgentBuilder    $userAgentBuilder,
-        RvvupConfigProvider $rvvupConfigProvider
+        RvvupConfigProvider $rvvupConfigProvider,
+        RemoteAddress       $remoteAddress
     )
     {
         $this->logger = $logger;
@@ -58,6 +63,7 @@ class Rvvalytix implements HttpPostActionInterface
         $this->resultFactory = $resultFactory;
         $this->userAgentBuilder = $userAgentBuilder;
         $this->rvvupConfigProvider = $rvvupConfigProvider;
+        $this->remoteAddress = $remoteAddress;
     }
 
     /**
@@ -68,7 +74,10 @@ class Rvvalytix implements HttpPostActionInterface
         $companyId = $this->request->getParam('company_id');
         $accountNumber = $this->request->getParam('account_number');
         $invoiceId = $this->request->getParam('invoice_id');
+        $source = $this->request->getParam('source');
+        $userAgent = $this->request->getParam('user_agent');
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+        $ipAddress = $this->remoteAddress->getRemoteAddress();
 
         try {
             $type = $this->mapType($this->request->getParam('type'));
@@ -76,7 +85,10 @@ class Rvvalytix implements HttpPostActionInterface
                 $companyId,
                 $accountNumber,
                 $invoiceId,
-                $type
+                $source,
+                $userAgent,
+                $type,
+                $ipAddress
             );
             $result->setData([
                 'success' => true
@@ -94,14 +106,20 @@ class Rvvalytix implements HttpPostActionInterface
      * @param string $companyId
      * @param string $accountId
      * @param string $invoiceId
+     * @param string $source
+     * @param string $userAgent
      * @param string $type
+     * @param string $ipAddress
      * @throws InputException
      */
     private function sendEvent(
         string $companyId,
         string $accountId,
         string $invoiceId,
-        string $type
+        string $source,
+        string $userAgent,
+        string $type,
+        string $ipAddress
     )
     {
         $rvvupConfig = $this->rvvupConfigProvider->getConfig($companyId);
@@ -109,7 +127,7 @@ class Rvvalytix implements HttpPostActionInterface
         $merchantId = $rvvupConfig['merchant_id'];
         $baseUrl = $rvvupConfig['endpoint'];
 
-        $params = $this->buildRequestData($merchantId, $companyId, $accountId, $invoiceId, $type, $rvvupConfig['auth_token']);
+        $params = $this->buildRequestData($merchantId, $companyId, $accountId, $invoiceId, $source, $userAgent, $type, $rvvupConfig['auth_token'], $ipAddress);
         $this->curl->request(
             Request::METHOD_POST,
             str_replace('graphql', "rvvalytix", $baseUrl),
@@ -122,8 +140,11 @@ class Rvvalytix implements HttpPostActionInterface
      * @param string $companyId
      * @param string $accountId
      * @param string $invoiceId
+     * @param string $source
+     * @param string $userAgent
      * @param string $type
      * @param string $authToken
+     * @param string $ipAddress
      * @return array
      */
     private function buildRequestData(
@@ -131,8 +152,11 @@ class Rvvalytix implements HttpPostActionInterface
         string $companyId,
         string $accountId,
         string $invoiceId,
+        string $source,
+        string $userAgent,
         string $type,
-        string $authToken
+        string $authToken,
+        string $ipAddress
     ): array
     {
         $postData = [
@@ -143,9 +167,12 @@ class Rvvalytix implements HttpPostActionInterface
                     "data" => [
                         "companyId" => $companyId,
                         "accountId" => $accountId,
-                        "invoiceId" => $invoiceId
+                        "invoiceId" => $invoiceId,
+                        "source" => $source,
+                        "customerUserAgent" => $userAgent,
+                        "customerIpAddress" => $ipAddress,
                     ],
-                    "originCreatedAt" => (new DateTime('now'))->format(DateTime::ATOM),
+                    "originCreatedAt" => (new DateTime('now'))->format('Y-m-d\TH:i:s.vP'),
                 ]
             ],
         ];
