@@ -45,7 +45,7 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function ($, alert) {
             });
         },
 
-        landingPage: function (url, company_id, account_number, invoice_id) {
+        landingPage: function (url, company_id, account_number, invoice_id, user_agent) {
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -53,12 +53,15 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function ($, alert) {
                     'company_id': company_id,
                     'account_number': account_number,
                     'invoice_id': invoice_id,
-                    'type': 'landing'
+                    'type': 'landing',
+                    metadata: {
+                        'user_agent': user_agent,
+                    },
                 }
             });
         },
 
-        payClicked: function (url, company_id, account_number, invoice_id) {
+        payClicked: function (url, company_id, account_number, invoice_id, user_agent) {
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -66,7 +69,10 @@ define(['jquery', 'Magento_Ui/js/modal/alert'], function ($, alert) {
                     'company_id': company_id,
                     'account_number': account_number,
                     'invoice_id': invoice_id,
-                    'type': 'pay_clicked'
+                    'type': 'pay_clicked',
+                    metadata: {
+                        'user_agent': user_agent,
+                    },
                 }
             });
         }

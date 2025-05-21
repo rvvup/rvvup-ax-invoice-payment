@@ -95,9 +95,9 @@ $buttonLoadingText = $escaper->escapeHtml($block->getButtonLoadingText());
         }
 
         function onPageLoad() {
-            rvvupCheckout.landingPage(rvvalytixUrl, companyId, accountNumber, invoiceId);
+            rvvupCheckout.landingPage(rvvalytixUrl, companyId, accountNumber, invoiceId, navigator.userAgent);
             button.addEventListener('click', function () {
-                rvvupCheckout.payClicked(rvvalytixUrl, companyId, accountNumber, invoiceId);
+                rvvupCheckout.payClicked(rvvalytixUrl, companyId, accountNumber, invoiceId, navigator.userAgent);
                 button.disabled = true;
                 buttonClicked = true;
                 if (statementUrl) {
