@@ -145,7 +145,7 @@ class Rvvalytix implements HttpPostActionInterface
                         "accountId" => $accountId,
                         "invoiceId" => $invoiceId
                     ],
-                    "originCreatedAt" => (new DateTime('now'))->format(DateTime::ATOM),
+                    "originCreatedAt" => (new DateTime('now'))->format('Y-m-d\TH:i:s.vP'),
                 ]
             ],
         ];
